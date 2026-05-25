@@ -1,0 +1,88 @@
+{
+    "name" : "oihana/php-http" ,
+    "type" : "library" ,
+    "description" : "Composable PHP HTTP toolkit — client IP detection (X-Forwarded-For chain walking + CIDR + IPv4/IPv6), typed Set-Cookie header builders, route pattern utilities (Slim optional segments + Casbin patterns), user-agent parsing. PSR-7 compatible, zero magic strings." ,
+    "keywords" : [
+        "php" ,
+        "http" ,
+        "psr-7" ,
+        "ip" ,
+        "x-forwarded-for" ,
+        "cidr" ,
+        "cookies" ,
+        "set-cookie" ,
+        "samesite" ,
+        "user-agent" ,
+        "route-pattern" ,
+        "slim" ,
+        "casbin"
+    ] ,
+    "homepage" : "https://github.com/BcommeBois/oihana-php-http" ,
+    "license" : "MPL-2.0" ,
+    "authors" : [
+        {
+            "name"     : "Marc Alcaraz" ,
+            "email"    : "marc@ooop.fr" ,
+            "homepage" : "https://www.ooop.fr" ,
+            "role"     : "Project Founder, Lead Developer."
+        }
+    ] ,
+    "support" : {
+        "email"  : "marc@ooop.fr" ,
+        "issues" : "https://github.com/BcommeBois/oihana-php-http/issues" ,
+        "source" : "https://github.com/BcommeBois/oihana-php-http"
+    } ,
+    "scripts" : {
+        "doc"  : "rm -rf docs && mkdir docs && cp -r assets docs/assets && ./vendor/bin/phpdoc -c phpdoc.xml -v" ,
+        "test" : "./vendor/bin/phpunit"
+    } ,
+    "autoload" : {
+        "psr-4" : {
+            "oihana\\http\\" : "src/oihana/http"
+        } ,
+        "files" : [
+            "src/oihana/http/helpers/casbinRoutePattern.php" ,
+            "src/oihana/http/helpers/expandOptionalSegments.php" ,
+            "src/oihana/http/helpers/getUserAgent.php" ,
+            "src/oihana/http/helpers/cookies/buildSetCookieHeader.php" ,
+            "src/oihana/http/helpers/cookies/expireSetCookieHeader.php" ,
+            "src/oihana/http/helpers/ips/acceptIp.php" ,
+            "src/oihana/http/helpers/ips/canonicalIp.php" ,
+            "src/oihana/http/helpers/ips/extractIpCandidatesFromGlobals.php" ,
+            "src/oihana/http/helpers/ips/extractIpCandidatesFromRequest.php" ,
+            "src/oihana/http/helpers/ips/getClientIp.php" ,
+            "src/oihana/http/helpers/ips/ipInList.php" ,
+            "src/oihana/http/helpers/ips/ipMatchesCidr.php" ,
+            "src/oihana/http/helpers/ips/isPublicIp.php" ,
+            "src/oihana/http/helpers/ips/parseForwardedHeader.php" ,
+            "src/oihana/http/helpers/ips/truncateIpToSlash24.php" ,
+            "src/oihana/http/helpers/ips/walkForwardedChain.php"
+        ]
+    } ,
+    "autoload-dev" : {
+        "psr-4" : {
+            "tests\\oihana\\http\\" : "tests/oihana/http"
+        }
+    } ,
+    "require" : {
+        "php"                  : ">=8.4" ,
+        "psr/http-message"     : "^2.0" ,
+        "oihana/php-core"      : "dev-main" ,
+        "oihana/php-enums"     : "dev-main" ,
+        "oihana/php-files"     : "dev-main" ,
+        "oihana/php-reflect"   : "dev-main"
+    } ,
+    "require-dev" : {
+        "phpunit/phpunit"      : "^12" ,
+        "nunomaduro/collision" : "^8.8" ,
+        "phpdocumentor/shim"   : "^3.8" ,
+        "slim/psr7"            : "^1.7"
+    } ,
+    "minimum-stability" : "dev" ,
+    "prefer-stable" : true ,
+    "config" : {
+        "allow-plugins" : {
+            "phpdocumentor/shim" : true
+        }
+    }
+}
