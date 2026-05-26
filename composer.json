@@ -52,8 +52,16 @@
             "src/oihana/http/helpers/isMobileUserAgent.php" ,
             "src/oihana/http/helpers/parseUserAgent.php" ,
             
+            "src/oihana/http/helpers/auth/getBasicAuth.php" ,
+            "src/oihana/http/helpers/auth/getBearerToken.php" ,
+            "src/oihana/http/helpers/auth/parseAuthorizationHeader.php" ,
+
             "src/oihana/http/helpers/dates/formatHttpDate.php" ,
             "src/oihana/http/helpers/dates/parseHttpDate.php" ,
+
+            "src/oihana/http/helpers/request/isAjax.php" ,
+            "src/oihana/http/helpers/request/isHttpsRequest.php" ,
+            "src/oihana/http/helpers/request/wantsJson.php" ,
 
             "src/oihana/http/helpers/negotiation/negotiate.php" ,
             "src/oihana/http/helpers/negotiation/parseAcceptEncoding.php" ,
