@@ -2,6 +2,7 @@
 
 namespace oihana\http\helpers\cookies ;
 
+use InvalidArgumentException;
 use oihana\http\enums\CookieAttribute ;
 use oihana\http\enums\CookieOption ;
 use oihana\http\enums\SameSite ;
@@ -61,7 +62,7 @@ use oihana\http\enums\SameSite ;
  *
  * @return string The full `Set-Cookie` header value.
  *
- * @throws \InvalidArgumentException When `$name` is not a valid RFC 7230
+ * @throws InvalidArgumentException When `$name` is not a valid RFC 7230
  *                                   token, or when `$value` contains an
  *                                   ASCII control character or `;`.
  *                                   See {@see validateCookieName()} and
