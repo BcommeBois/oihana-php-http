@@ -52,6 +52,9 @@
             "src/oihana/http/helpers/isMobileUserAgent.php" ,
             "src/oihana/http/helpers/parseUserAgent.php" ,
             
+            "src/oihana/http/helpers/dates/formatHttpDate.php" ,
+            "src/oihana/http/helpers/dates/parseHttpDate.php" ,
+
             "src/oihana/http/helpers/cookies/buildSetCookieHeader.php" ,
             "src/oihana/http/helpers/cookies/expireSetCookieHeader.php" ,
             "src/oihana/http/helpers/cookies/parseCookieHeader.php" ,
