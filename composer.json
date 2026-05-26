@@ -79,6 +79,10 @@
             "src/oihana/http/helpers/url/removeQueryParam.php" ,
             "src/oihana/http/helpers/url/withQueryParams.php" ,
 
+            "src/oihana/http/helpers/signatures/signUrl.php" ,
+            "src/oihana/http/helpers/signatures/verifyHmacSignature.php" ,
+            "src/oihana/http/helpers/signatures/verifySignedUrl.php" ,
+
             "src/oihana/http/helpers/cookies/buildSetCookieHeader.php" ,
             "src/oihana/http/helpers/cookies/expireSetCookieHeader.php" ,
             "src/oihana/http/helpers/cookies/parseCookieHeader.php" ,
