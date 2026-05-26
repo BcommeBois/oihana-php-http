@@ -55,6 +55,12 @@
             "src/oihana/http/helpers/dates/formatHttpDate.php" ,
             "src/oihana/http/helpers/dates/parseHttpDate.php" ,
 
+            "src/oihana/http/helpers/negotiation/negotiate.php" ,
+            "src/oihana/http/helpers/negotiation/parseAcceptEncoding.php" ,
+            "src/oihana/http/helpers/negotiation/parseAcceptHeader.php" ,
+            "src/oihana/http/helpers/negotiation/parseAcceptLanguage.php" ,
+            "src/oihana/http/helpers/negotiation/parseContentType.php" ,
+
             "src/oihana/http/helpers/cookies/buildSetCookieHeader.php" ,
             "src/oihana/http/helpers/cookies/expireSetCookieHeader.php" ,
             "src/oihana/http/helpers/cookies/parseCookieHeader.php" ,
