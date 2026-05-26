@@ -50,7 +50,10 @@
             "src/oihana/http/helpers/getUserAgent.php" ,
             "src/oihana/http/helpers/isBotUserAgent.php" ,
             "src/oihana/http/helpers/isMobileUserAgent.php" ,
+            "src/oihana/http/helpers/matchSlimPattern.php" ,
             "src/oihana/http/helpers/parseUserAgent.php" ,
+            "src/oihana/http/helpers/slimToCasbinPattern.php" ,
+            "src/oihana/http/helpers/slimToRegex.php" ,
             
             "src/oihana/http/helpers/auth/getBasicAuth.php" ,
             "src/oihana/http/helpers/auth/getBearerToken.php" ,
