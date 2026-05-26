@@ -46,6 +46,8 @@
             "src/oihana/http/helpers/getUserAgent.php" ,
             "src/oihana/http/helpers/cookies/buildSetCookieHeader.php" ,
             "src/oihana/http/helpers/cookies/expireSetCookieHeader.php" ,
+            "src/oihana/http/helpers/cookies/parseCookieHeader.php" ,
+            "src/oihana/http/helpers/cookies/parseSetCookieHeader.php" ,
             "src/oihana/http/helpers/cookies/validateCookieName.php" ,
             "src/oihana/http/helpers/cookies/validateCookieValue.php" ,
             "src/oihana/http/helpers/ips/acceptIp.php" ,
@@ -72,7 +74,8 @@
         "oihana/php-core"      : "dev-main" ,
         "oihana/php-enums"     : "dev-main" ,
         "oihana/php-files"     : "dev-main" ,
-        "oihana/php-reflect"   : "dev-main"
+        "oihana/php-reflect"   : "dev-main" ,
+        "oihana/php-standards" : "dev-main"
     } ,
     "require-dev" : {
         "phpunit/phpunit"      : "^12" ,

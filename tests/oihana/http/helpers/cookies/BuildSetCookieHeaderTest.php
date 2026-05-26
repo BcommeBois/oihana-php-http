@@ -2,8 +2,11 @@
 
 namespace tests\oihana\http\helpers\cookies ;
 
+use DateTimeImmutable ;
+use DateTimeZone ;
 use InvalidArgumentException ;
 use oihana\http\enums\CookieOption ;
+use oihana\http\enums\CookiePriority ;
 use oihana\http\enums\SameSite ;
 use PHPUnit\Framework\TestCase ;
 
@@ -194,5 +197,167 @@ class BuildSetCookieHeaderTest extends TestCase
     {
         $this->expectException( InvalidArgumentException::class ) ;
         buildSetCookieHeader( 'access_token' , "foo\x00bar" , 60 ) ;
+    }
+
+    public function testExpiresFromDateTimeImmutableIsFormattedAsIMFFixdateGMT() :void
+    {
+        $dt = new DateTimeImmutable( '2026-12-31 23:59:59' , new DateTimeZone( 'UTC' ) ) ;
+
+        $header = buildSetCookieHeader
+        (
+            'access_token' ,
+            'abc' ,
+            3600 ,
+            [ CookieOption::EXPIRES => $dt ] ,
+        ) ;
+
+        $this->assertStringContainsString( 'Expires=Thu, 31 Dec 2026 23:59:59 GMT' , $header ) ;
+    }
+
+    public function testExpiresFromDateTimeIsConvertedToUTC() :void
+    {
+        // 00:00:00 in CEST (UTC+2) → 22:00:00 the previous day in UTC.
+        $dt = new DateTimeImmutable( '2026-07-01 00:00:00' , new DateTimeZone( 'Europe/Paris' ) ) ;
+
+        $header = buildSetCookieHeader
+        (
+            'access_token' ,
+            'abc' ,
+            3600 ,
+            [ CookieOption::EXPIRES => $dt ] ,
+        ) ;
+
+        $this->assertStringContainsString( 'Expires=Tue, 30 Jun 2026 22:00:00 GMT' , $header ) ;
+    }
+
+    public function testExpiresFromUnixTimestamp() :void
+    {
+        // 2026-01-01 00:00:00 UTC = 1767225600
+        $header = buildSetCookieHeader
+        (
+            'access_token' ,
+            'abc' ,
+            3600 ,
+            [ CookieOption::EXPIRES => 1767225600 ] ,
+        ) ;
+
+        $this->assertStringContainsString( 'Expires=Thu, 01 Jan 2026 00:00:00 GMT' , $header ) ;
+    }
+
+    public function testExpiresFromPreFormattedStringIsPassedThrough() :void
+    {
+        $header = buildSetCookieHeader
+        (
+            'access_token' ,
+            'abc' ,
+            3600 ,
+            [ CookieOption::EXPIRES => 'Wed, 21 Oct 2026 07:28:00 GMT' ] ,
+        ) ;
+
+        $this->assertStringContainsString( 'Expires=Wed, 21 Oct 2026 07:28:00 GMT' , $header ) ;
+    }
+
+    public function testExpiresNullIsSkipped() :void
+    {
+        $header = buildSetCookieHeader
+        (
+            'access_token' ,
+            'abc' ,
+            3600 ,
+            [ CookieOption::EXPIRES => null ] ,
+        ) ;
+
+        $this->assertStringNotContainsString( 'Expires=' , $header ) ;
+    }
+
+    public function testPriorityAttributeIsAppendedWhenSet() :void
+    {
+        $header = buildSetCookieHeader
+        (
+            'access_token' ,
+            'abc' ,
+            3600 ,
+            [ CookieOption::PRIORITY => CookiePriority::HIGH ] ,
+        ) ;
+
+        $this->assertStringContainsString( 'Priority=High' , $header ) ;
+    }
+
+    public function testPriorityNullIsSkipped() :void
+    {
+        $header = buildSetCookieHeader
+        (
+            'access_token' ,
+            'abc' ,
+            3600 ,
+            [ CookieOption::PRIORITY => null ] ,
+        ) ;
+
+        $this->assertStringNotContainsString( 'Priority=' , $header ) ;
+    }
+
+    public function testInvalidPriorityRejected() :void
+    {
+        $this->expectException( InvalidArgumentException::class ) ;
+        buildSetCookieHeader
+        (
+            'access_token' ,
+            'abc' ,
+            3600 ,
+            [ CookieOption::PRIORITY => 'Critical' ] ,
+        ) ;
+    }
+
+    public function testPartitionedFlagAppendedWhenTrue() :void
+    {
+        $header = buildSetCookieHeader
+        (
+            'access_token' ,
+            'abc' ,
+            3600 ,
+            [
+                CookieOption::PARTITIONED => true ,
+                CookieOption::SECURE      => true ,
+            ] ,
+        ) ;
+
+        $this->assertStringEndsWith( '; Partitioned' , $header ) ;
+    }
+
+    public function testPartitionedFalseIsSkipped() :void
+    {
+        $header = buildSetCookieHeader
+        (
+            'access_token' ,
+            'abc' ,
+            3600 ,
+            [ CookieOption::PARTITIONED => false ] ,
+        ) ;
+
+        $this->assertStringNotContainsString( 'Partitioned' , $header ) ;
+    }
+
+    public function testAllNewAttributesCombined() :void
+    {
+        $dt = new DateTimeImmutable( '2026-12-31 23:59:59' , new DateTimeZone( 'UTC' ) ) ;
+
+        $header = buildSetCookieHeader
+        (
+            'refresh_token' ,
+            'rt_xyz' ,
+            2592000 ,
+            [
+                CookieOption::SECURE      => true                  ,
+                CookieOption::EXPIRES     => $dt                   ,
+                CookieOption::PRIORITY    => CookiePriority::HIGH  ,
+                CookieOption::PARTITIONED => true                  ,
+            ] ,
+        ) ;
+
+        $this->assertSame
+        (
+            'refresh_token=rt_xyz; Path=/; Max-Age=2592000; SameSite=Lax; HttpOnly; Secure; Expires=Thu, 31 Dec 2026 23:59:59 GMT; Priority=High; Partitioned' ,
+            $header ,
+        ) ;
     }
 }

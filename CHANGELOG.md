@@ -14,8 +14,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `buildSetCookieHeader()` now emits three additional `Set-Cookie` attributes when the corresponding options are set: `Expires` (`CookieOption::EXPIRES`, accepts `int` Unix timestamp / `string` pre-formatted / `DateTimeInterface` / `null`), `Priority` (`CookieOption::PRIORITY`, one of the `CookiePriority` constants or `null`) and `Partitioned` (`CookieOption::PARTITIONED`, bool flag — CHIPS). All three are appended at the end of the header so the existing emission order is preserved when none of them are set. `int` and `DateTimeInterface` `Expires` values are normalised to UTC and formatted as RFC 7231 IMF-fixdate (e.g. `Thu, 31 Dec 2026 23:59:59 GMT`). Unknown `Priority` values throw `InvalidArgumentException`.
+- `CookiePriority` enum class under `oihana\http\enums` with `LOW`, `MEDIUM`, `HIGH` constants matching the Chromium cookie-priority extension to RFC 6265.
+- `CookieAttribute::EXPIRES`, `::PRIORITY`, `::PARTITIONED` wire-format constants.
+- `CookieOption::EXPIRES`, `::PRIORITY`, `::PARTITIONED` option keys.
+- `parseCookieHeader()` helper — parses an HTTP request `Cookie:` header into a `name => value` map. Reciprocal read-side counterpart of `buildSetCookieHeader()`. Values are returned verbatim (no URL-decoding).
+- `parseSetCookieHeader()` helper — parses a single `Set-Cookie` response header into a structured `{name, value, attributes}` tuple. Attribute names are normalised to canonical casing via `CookieAttribute` lookups. Useful for tests and for inspecting cookies set by upstream services.
+- `SetCookieField` enum class under `oihana\http\enums` — exposes the `NAME`, `VALUE`, `ATTRIBUTES` keys of the tuple returned by `parseSetCookieHeader()` so consumers can avoid magic strings.
 - `validateCookieName()` and `validateCookieValue()` helpers under `oihana\http\helpers\cookies` — enforce the RFC 6265 / RFC 7230 grammar for cookie names and reject HTTP-injection-prone values (ASCII control characters and `;`). Used internally by `buildSetCookieHeader()` and exposed publicly so application code can validate user-supplied data defensively.
 - Initial scaffold: Composer manifest, PHPUnit 12 + phpDocumentor 3 configuration, MPL-2.0 license, README, CHANGELOG, sibling-aligned folder layout (`src/`, `tests/`, `wiki/`, `assets/`).
+
+### Dependencies
+
+- Added `oihana/php-standards: dev-main` to `require` — used to format cookie `Expires` values via the `org\common\DateFormat::RFC7231` constant (RFC 7231 IMF-fixdate).
 - Source code under `src/oihana/http/` (19 PHP files):
   - `helpers/` (16 functions): `casbinRoutePattern`, `expandOptionalSegments`, `getUserAgent`, plus `cookies/` (`buildSetCookieHeader`, `expireSetCookieHeader`) and `ips/` (11 helpers covering X-Forwarded-For chain walking, CIDR matching, IPv4/IPv6 canonicalization, public/private detection and `/24` truncation for GDPR logging).
   - `enums/` (3 typed constant classes): `CookieAttribute`, `CookieOption`, `SameSite`.
