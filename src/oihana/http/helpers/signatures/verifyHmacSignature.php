@@ -4,6 +4,8 @@ declare( strict_types = 1 );
 
 namespace oihana\http\helpers\signatures ;
 
+use function oihana\core\encoding\base64UrlEncode ;
+
 /**
  * Verifies an HMAC signature against a raw payload — the building
  * block of webhook authentication (Stripe, GitHub, Slack,

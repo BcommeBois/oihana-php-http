@@ -6,6 +6,7 @@ namespace oihana\http\helpers\signatures ;
 
 use InvalidArgumentException ;
 
+use function oihana\core\encoding\base64UrlEncode ;
 use function oihana\http\helpers\url\buildQueryString ;
 use function oihana\http\helpers\url\normalizeUrl ;
 use function oihana\http\helpers\url\parseQueryString ;
@@ -115,38 +116,4 @@ function signUrl( string $url , string $secret , ?int $ttlSeconds = null , strin
     $parts[ 'query' ] = buildQueryString( $query ) ;
 
     return normalizeUrl( reassembleUrl( $parts ) ) ;
-}
-
-/**
- * Encodes binary data with base64url (RFC 4648 §5) — `+` → `-`,
- * `/` → `_`, padding stripped.
- *
- * Internal helper. Not part of the public API.
- *
- * @internal
- *
- * @param string $binary
- *
- * @return string
- */
-function base64UrlEncode( string $binary ) :string
-{
-    return rtrim( strtr( base64_encode( $binary ) , '+/' , '-_' ) , '=' ) ;
-}
-
-/**
- * Decodes a base64url-encoded string (RFC 4648 §5).
- *
- * Internal helper. Not part of the public API.
- *
- * @internal
- *
- * @param string $value
- *
- * @return string|false `false` on invalid input.
- */
-function base64UrlDecode( string $value ) :string|false
-{
-    $padded = $value . str_repeat( '=' , ( 4 - strlen( $value ) % 4 ) % 4 ) ;
-    return base64_decode( strtr( $padded , '-_' , '+/' ) , true ) ;
 }

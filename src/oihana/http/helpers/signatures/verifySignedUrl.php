@@ -4,6 +4,8 @@ declare( strict_types = 1 );
 
 namespace oihana\http\helpers\signatures ;
 
+use function oihana\core\encoding\base64UrlDecode ;
+use function oihana\core\encoding\base64UrlEncode ;
 use function oihana\http\helpers\url\buildQueryString ;
 use function oihana\http\helpers\url\normalizeUrl ;
 use function oihana\http\helpers\url\parseQueryString ;
