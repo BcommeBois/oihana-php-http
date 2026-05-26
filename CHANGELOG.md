@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- README: align the "What you can do" section with the helpers actually shipped — drop the IPv6 mention from `truncateIpToSlash24` (currently IPv4-only), drop `Expires` from the cookie attributes list (only `Max-Age` is emitted today), and replace the structured user-agent claim with the actual `getUserAgent()` raw-string accessor. Full IPv6 truncation, cookie `Expires` and structured UA parsing are tracked for upcoming releases.
+
 ### Added
 
 - Initial scaffold: Composer manifest, PHPUnit 12 + phpDocumentor 3 configuration, MPL-2.0 license, README, CHANGELOG, sibling-aligned folder layout (`src/`, `tests/`, `wiki/`, `assets/`).

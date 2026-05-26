@@ -25,11 +25,11 @@ composer require oihana/php-http
 ## ✨ What you can do
 
 - **Detect the real client IP** behind a chain of trusted reverse proxies. Walks `X-Forwarded-For` right-to-left, skips trusted hops via CIDR matching, falls back on `Forwarded` (RFC 7239), `X-Real-IP` and `REMOTE_ADDR`. Validates IPv4 and IPv6, normalizes IPv4-mapped IPv6 (`::ffff:1.2.3.4` → `1.2.3.4`), strips IPv6 zone IDs.
-- **Truncate IPs for GDPR-friendly logging** — `truncateIpToSlash24()` keeps the first three octets of an IPv4 and zeroes the last 80 bits of an IPv6.
-- **Build `Set-Cookie` headers** with typed attributes: `HttpOnly`, `Secure`, `SameSite=Strict|Lax|None`, `Domain`, `Path`, `Expires`, `Max-Age`.
+- **Truncate IPs for GDPR-friendly logging** — `truncateIpToSlash24()` keeps the first three octets of an IPv4 and zeroes the last one. IPv6 is currently passed through unchanged.
+- **Build `Set-Cookie` headers** with typed attributes: `HttpOnly`, `Secure`, `SameSite=Strict|Lax|None`, `Domain`, `Path`, `Max-Age`.
 - **Expand Slim route patterns** carrying optional bracket segments (`/users[/{id:[0-9]+}]`) into their cartesian product of concrete routes — useful for permission seeding and route-by-route authorization.
 - **Translate Slim route patterns into Casbin patterns** by collapsing `{placeholder}` segments into `*`.
-- **Parse user-agent** strings into structured info (browser, OS, device class, bot detection).
+- **Read the request User-Agent** string via `getUserAgent()`.
 
 ### Under the hood
 
