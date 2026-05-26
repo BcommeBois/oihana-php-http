@@ -42,14 +42,23 @@
         } ,
         "files" : [
             "src/oihana/http/helpers/casbinRoutePattern.php" ,
+            "src/oihana/http/helpers/detectUserAgentBot.php" ,
+            "src/oihana/http/helpers/detectUserAgentBrowser.php" ,
+            "src/oihana/http/helpers/detectUserAgentDeviceType.php" ,
+            "src/oihana/http/helpers/detectUserAgentOs.php" ,
             "src/oihana/http/helpers/expandOptionalSegments.php" ,
             "src/oihana/http/helpers/getUserAgent.php" ,
+            "src/oihana/http/helpers/isBotUserAgent.php" ,
+            "src/oihana/http/helpers/isMobileUserAgent.php" ,
+            "src/oihana/http/helpers/parseUserAgent.php" ,
+            
             "src/oihana/http/helpers/cookies/buildSetCookieHeader.php" ,
             "src/oihana/http/helpers/cookies/expireSetCookieHeader.php" ,
             "src/oihana/http/helpers/cookies/parseCookieHeader.php" ,
             "src/oihana/http/helpers/cookies/parseSetCookieHeader.php" ,
             "src/oihana/http/helpers/cookies/validateCookieName.php" ,
             "src/oihana/http/helpers/cookies/validateCookieValue.php" ,
+            
             "src/oihana/http/helpers/ips/acceptIp.php" ,
             "src/oihana/http/helpers/ips/anonymizeIp.php" ,
             "src/oihana/http/helpers/ips/canonicalIp.php" ,
@@ -77,6 +86,7 @@
         "oihana/php-enums"     : "dev-main" ,
         "oihana/php-files"     : "dev-main" ,
         "oihana/php-reflect"   : "dev-main" ,
+        "oihana/php-schema"    : "dev-main" ,
         "oihana/php-standards" : "dev-main"
     } ,
     "require-dev" : {
