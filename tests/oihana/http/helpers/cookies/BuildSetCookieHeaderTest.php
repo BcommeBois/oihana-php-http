@@ -2,6 +2,7 @@
 
 namespace tests\oihana\http\helpers\cookies ;
 
+use InvalidArgumentException ;
 use oihana\http\enums\CookieOption ;
 use oihana\http\enums\SameSite ;
 use PHPUnit\Framework\TestCase ;
@@ -163,5 +164,35 @@ class BuildSetCookieHeaderTest extends TestCase
 
         $this->assertStringContainsString( '; ' , $header ) ;
         $this->assertStringNotContainsString( ';;' , $header ) ;
+    }
+
+    public function testInvalidNameRejected() :void
+    {
+        $this->expectException( InvalidArgumentException::class ) ;
+        buildSetCookieHeader( 'foo bar' , 'value' , 60 ) ;
+    }
+
+    public function testEmptyNameRejected() :void
+    {
+        $this->expectException( InvalidArgumentException::class ) ;
+        buildSetCookieHeader( '' , 'value' , 60 ) ;
+    }
+
+    public function testValueWithSemicolonRejected() :void
+    {
+        $this->expectException( InvalidArgumentException::class ) ;
+        buildSetCookieHeader( 'access_token' , 'foo; HttpOnly' , 60 ) ;
+    }
+
+    public function testValueWithCRLFRejected() :void
+    {
+        $this->expectException( InvalidArgumentException::class ) ;
+        buildSetCookieHeader( 'access_token' , "foo\r\nSet-Cookie: evil=1" , 60 ) ;
+    }
+
+    public function testValueWithNullByteRejected() :void
+    {
+        $this->expectException( InvalidArgumentException::class ) ;
+        buildSetCookieHeader( 'access_token' , "foo\x00bar" , 60 ) ;
     }
 }

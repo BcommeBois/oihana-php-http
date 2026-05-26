@@ -60,9 +60,22 @@ use oihana\http\enums\SameSite ;
  *           - `CookieOption::HTTP_ONLY` (bool, default `true`)
  *
  * @return string The full `Set-Cookie` header value.
+ *
+ * @throws \InvalidArgumentException When `$name` is not a valid RFC 7230
+ *                                   token, or when `$value` contains an
+ *                                   ASCII control character or `;`.
+ *                                   See {@see validateCookieName()} and
+ *                                   {@see validateCookieValue()}.
  */
 function buildSetCookieHeader( string $name , ?string $value , int $maxAge , array $options = [] ) :string
 {
+    validateCookieName( $name ) ;
+
+    if ( $value !== null )
+    {
+        validateCookieValue( $value ) ;
+    }
+
     $domain   = $options[ CookieOption::DOMAIN    ] ?? ''             ;
     $secure   = $options[ CookieOption::SECURE    ] ?? false          ;
     $path     = $options[ CookieOption::PATH      ] ?? '/'            ;

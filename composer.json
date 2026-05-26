@@ -46,6 +46,8 @@
             "src/oihana/http/helpers/getUserAgent.php" ,
             "src/oihana/http/helpers/cookies/buildSetCookieHeader.php" ,
             "src/oihana/http/helpers/cookies/expireSetCookieHeader.php" ,
+            "src/oihana/http/helpers/cookies/validateCookieName.php" ,
+            "src/oihana/http/helpers/cookies/validateCookieValue.php" ,
             "src/oihana/http/helpers/ips/acceptIp.php" ,
             "src/oihana/http/helpers/ips/canonicalIp.php" ,
             "src/oihana/http/helpers/ips/extractIpCandidatesFromGlobals.php" ,
