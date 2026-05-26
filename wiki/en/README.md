@@ -2,53 +2,87 @@
 
 ![Language](https://img.shields.io/badge/language-English-blue)
 
-`oihana/php-http` is a small PHP toolkit for HTTP-facing code: client IP detection against reverse proxies, typed `Set-Cookie` header builders, route pattern utilities, and user-agent parsing. PSR-7 compatible, zero magic strings.
+`oihana/php-http` is a composable PHP library for HTTP-facing code: real client IP detection behind reverse proxies, GDPR-compliant anonymisation, typed cookie builders and parsers, PSR-7 authentication and request inspection helpers, content negotiation, HTTP dates, URL/query string, Slim-style route patterns, HMAC signatures for signed URLs and webhooks, User-Agent parser. PSR-7 compatible, zero magic strings, zero external dependency (outside the oihana ecosystem).
 
-## Who this documentation is for
+## Audience
 
 PHP developers building an API behind one or more reverse proxies (Cloudflare, nginx, AWS ALB, …) who need to:
 
-- correctly identify the real client IP, with full control over the trusted-proxy chain;
-- truncate IPs to `/24` (IPv4) or `/48` (IPv6) for GDPR-compliant logging;
-- emit `Set-Cookie` headers without juggling string concatenation and forgetting `SameSite` or `HttpOnly`;
-- handle Slim route patterns with optional bracket segments — for permission seeding, route-by-route authorization, or 1:1 route → Casbin policy mapping.
+- identify the real client IP with full control over the trusted-proxy chain, and truncate for GDPR (IPv4 `/24`, IPv6 `/48`);
+- emit secure cookies without forgetting `SameSite`, `Secure`, `HttpOnly`, `Partitioned`;
+- validate `Authorization` headers (Bearer, Basic), quickly inspect a request (`wantsJson`, `isAjax`, `isHttpsRequest`);
+- negotiate content (`Accept*`, `parseContentType`);
+- parse and format HTTP dates (RFC 7231 IMF-fixdate, RFC 850, asctime);
+- manipulate URLs and query strings without losing duplicates;
+- compile / match / convert Slim route patterns for Casbin seeding or OpenAPI;
+- sign URLs with a TTL and verify HMAC webhooks in constant time;
+- parse a User-Agent for analytics routing / bot detection.
 
 ## Quick start
 
 ```php
-use function oihana\http\helpers\ips\getClientIp ;
-use function oihana\http\helpers\cookies\buildSetCookieHeader ;
+use function oihana\http\helpers\auth\getBearerToken                 ;
+use function oihana\http\helpers\cookies\buildSetCookieHeader        ;
+use function oihana\http\helpers\ips\getClientIp                     ;
+use function oihana\http\helpers\request\wantsJson                   ;
+use function oihana\http\helpers\signatures\verifyHmacSignature      ;
 
-use oihana\http\enums\CookieAttribute ;
-use oihana\http\enums\SameSite        ;
+use oihana\http\enums\CookieOption ;
+use oihana\http\enums\SameSite     ;
 
-// 1. Detect the real client IP, trusting only your reverse proxy CIDR(s)
+// 1. Client IP behind your reverse-proxy CIDR
 $clientIp = getClientIp( $request , [ '10.0.0.0/8' , '192.168.0.0/16' ] ) ;
 
-// 2. Build a Set-Cookie header for an authenticated session
-$header = buildSetCookieHeader( 'session' , $token ,
+// 2. Secure session cookie
+$header = buildSetCookieHeader( 'session' , $token , 3600 ,
 [
-    CookieAttribute::HTTP_ONLY => true ,
-    CookieAttribute::SECURE    => true ,
-    CookieAttribute::SAME_SITE => SameSite::STRICT ,
-    CookieAttribute::PATH      => '/' ,
-    CookieAttribute::MAX_AGE   => 3600 ,
+    CookieOption::SECURE      => true               ,
+    CookieOption::SAME_SITE   => SameSite::STRICT   ,
+    CookieOption::PATH        => '/'                ,
 ]) ;
+
+// 3. Bearer token + JSON negotiation
+$token = getBearerToken( $request ) ;
+$wantsJson = wantsJson( $request ) ;
+
+// 4. Stripe / GitHub / Slack webhook
+$payload = (string) $request->getBody() ;
+$sig     = $request->getHeaderLine( 'X-Webhook-Signature' ) ;
+if ( !verifyHmacSignature( $payload , $sig , $webhookSecret ) )
+{
+    return new Response( 401 ) ;
+}
 ```
 
 ## Table of contents
 
-- [Getting started](getting-started.md) — install, PSR-7 request mocking, first two-liners.
-- [IP detection (ips/)](ips.md) — `getClientIp`, `walkForwardedChain`, `parseForwardedHeader`, `canonicalIp`, `ipMatchesCidr`, `ipInList`, `isPublicIp`, `acceptIp`, `truncateIpToSlash24`, `extractIpCandidatesFrom*`.
-- [Cookies](cookies.md) — `buildSetCookieHeader`, `expireSetCookieHeader`, typed `CookieAttribute` / `CookieOption` / `SameSite` enums.
-- [Route patterns](route-patterns.md) — `expandOptionalSegments` (Slim optional segments → cartesian product), `casbinRoutePattern` (Slim `{placeholder}` → Casbin `*`).
+### HTTP building blocks
+
+- **[Getting started](getting-started.md)** — installation, PSR-7 mocking, first examples.
+- **[IP detection](ips.md)** — `getClientIp`, GDPR anonymisation (`truncateIpToSlash24/48`, `anonymizeIp`), `Forwarded` parsing (RFC 7239), CIDR matching.
+- **[Cookies](cookies.md)** — `buildSetCookieHeader`, `expireSetCookieHeader`, `parseCookieHeader`, `parseSetCookieHeader`, `validateCookie{Name,Value}`, enums `CookieAttribute` / `CookieOption` / `CookiePriority` / `SameSite` / `SetCookieField`.
+- **[Authorization](authorization.md)** — `parseAuthorizationHeader`, `getBearerToken`, `getBasicAuth`, enums `AuthorizationField` / `BasicAuthField`.
+- **[PSR-7 request helpers](request.md)** — `wantsJson`, `isAjax`, `isHttpsRequest`.
+- **[Content negotiation](negotiation.md)** — `parseAcceptHeader` / `parseAcceptLanguage` / `parseAcceptEncoding`, `negotiate`, `parseContentType`, enums `AcceptField` / `ContentTypeField`.
+- **[HTTP dates](dates.md)** — `parseHttpDate` (3 RFC 7231 formats), `formatHttpDate` (IMF-fixdate).
+- **[URL / Query string](urls.md)** — `parseQueryString`, `buildQueryString`, `withQueryParams`, `removeQueryParam`, `normalizeUrl`, `isAbsoluteUrl`.
+
+### Higher-level
+
+- **[User-Agent](user-agent.md)** — `parseUserAgent`, detect helpers, `isBotUserAgent`, `isMobileUserAgent`, enums `BrowserName` / `OsName` + `UserAgentInfo` DTO (`oihana/php-schema`).
+- **[Route patterns](route-patterns.md)** — `expandOptionalSegments`, `slimToRegex`, `matchSlimPattern`, `slimToCasbinPattern`, `casbinRoutePattern`.
+- **[HMAC signatures](signatures.md)** — `signUrl`, `verifySignedUrl`, `verifyHmacSignature` (Stripe / GitHub / Slack / Mailchimp).
 
 ## Source code
 
-The framework code lives under [`src/oihana/http/`](../../src/oihana/http/).
+The library code lives under [`src/oihana/http/`](../../src/oihana/http/).
 
 ## See also
 
-- [Packagist `oihana/php-http`](https://packagist.org/packages/oihana/php-http) — the package page.
-- [`oihana/php-auth`](https://github.com/BcommeBois/oihana-php-auth) — Casbin RBAC + JWT/OIDC, consumes the route pattern helpers when seeding permissions.
-- [`oihana/php-enums`](https://github.com/BcommeBois/oihana-php-enums) — typed HTTP constants (`HttpHeader`, `HttpStatusCode`, …) used throughout the examples.
+- [Packagist `oihana/php-http`](https://packagist.org/packages/oihana/php-http) — package page.
+- [`oihana/php-auth`](https://github.com/BcommeBois/oihana-php-auth) — Casbin RBAC + JWT/OIDC; consumes the IP, cookie and route-pattern helpers.
+- [`oihana/php-enums`](https://github.com/BcommeBois/oihana-php-enums) — typed HTTP constants (`HttpHeader`, `HttpStatusCode`, `AuthScheme`, …).
+- [`oihana/php-schema`](https://github.com/BcommeBois/oihana-php-schema) — shared DTOs (`UserAgentInfo`, `Session`, …).
+- [`oihana/php-standards`](https://github.com/BcommeBois/oihana-php-standards) — standard date formats (`DateFormat::RFC7231`).
+- [`oihana/php-core`](https://github.com/BcommeBois/oihana-php-core) — encoding (`base64UrlEncode` / `base64UrlDecode`).
+- [`oihana/php-files`](https://github.com/BcommeBois/oihana-php-files) — `joinPaths()` for URL path concatenation.

@@ -1,85 +1,188 @@
 # Cookies
 
-Le dossier `helpers/cookies/` contient deux helpers pour construire des en-têtes `Set-Cookie` conformes aux standards sans jongler avec la concaténation de chaînes. Tous les attributs passent par trois enums typés — pas de chaînes magiques, pas d'attributs oubliés.
+Le dossier `helpers/cookies/` contient six helpers pour construire et parser des en-têtes `Set-Cookie` / `Cookie` sans jongler avec la concaténation de chaînes. Tous les attributs passent par des enums typés — zéro chaîne magique, zéro oubli.
 
-## `buildSetCookieHeader( string $name , string $value , array $attributes = [] ) : string`
+## Builder
 
-Construit une valeur d'en-tête `Set-Cookie` à partir d'un `name`, d'un `value`, et d'une map d'attributs.
+### `buildSetCookieHeader( string $name , ?string $value , int $maxAge , array $options = [] ) : string`
+
+Construit un en-tête `Set-Cookie`. Le `$name` et le `$value` sont validés à l'entrée — entrées invalides → `InvalidArgumentException` (sécurité contre les attaques de CRLF / response splitting / attribute injection).
 
 ```php
 use function oihana\http\helpers\cookies\buildSetCookieHeader ;
 
-use oihana\http\enums\CookieAttribute ;
-use oihana\http\enums\SameSite        ;
+use oihana\http\enums\CookieOption ;
+use oihana\http\enums\CookiePriority ;
+use oihana\http\enums\SameSite ;
 
-$header = buildSetCookieHeader( 'session' , 'abc123' ,
-[
-    CookieAttribute::HTTP_ONLY => true              ,
-    CookieAttribute::SECURE    => true              ,
-    CookieAttribute::SAME_SITE => SameSite::STRICT  ,
-    CookieAttribute::PATH      => '/'               ,
-    CookieAttribute::DOMAIN    => 'example.com'     ,
-    CookieAttribute::MAX_AGE   => 3600              ,
-    CookieAttribute::EXPIRES   => 'Wed, 09 Jun 2026 10:18:14 GMT' ,
-]) ;
-
-// session=abc123; Domain=example.com; Path=/; Expires=Wed, 09 Jun 2026 10:18:14 GMT;
-//   Max-Age=3600; HttpOnly; Secure; SameSite=Strict
+$header = buildSetCookieHeader
+(
+    'session' ,         // nom
+    $token ,            // valeur (ou null)
+    3600 ,              // max-age en secondes
+    [
+        CookieOption::SECURE      => true                   ,
+        CookieOption::SAME_SITE   => SameSite::STRICT       ,
+        CookieOption::PATH        => '/'                    ,
+        CookieOption::DOMAIN      => 'example.com'          ,
+        CookieOption::EXPIRES     => new DateTimeImmutable( '+1 hour' , new DateTimeZone( 'UTC' ) ) ,
+        CookieOption::PRIORITY    => CookiePriority::HIGH   ,
+        CookieOption::PARTITIONED => true                   ,
+    ]
+) ;
+// session=…; Path=/; Max-Age=3600; SameSite=Strict; HttpOnly; Secure;
+//   Domain=example.com; Expires=Thu, 31 Dec 2026 …GMT; Priority=High; Partitioned
 ```
 
-La valeur n'est **pas URL-encodée** automatiquement — encodez-la vous-même si elle contient des caractères réservés. Les attributs sont émis dans l'ordre canonique quel que soit l'ordre du tableau d'entrée.
+Défauts appliqués (modifiables via `$options`) : `Path=/`, `HttpOnly`, `SameSite=Lax`, pas de `Domain`, pas de `Secure`, pas de `Expires`, pas de `Priority`, pas de `Partitioned`.
 
-## `expireSetCookieHeader( string $name , array $attributes = [] ) : string`
+#### Format accepté pour `Expires`
 
-Émet un `Set-Cookie` de suppression pour le nom donné : `Max-Age=0` + `Expires=` dans le passé. Réutilisez les mêmes `Path` / `Domain` que ceux utilisés pour poser le cookie, sinon le navigateur ne fera pas correspondre la suppression.
+| Type passé | Comportement |
+|---|---|
+| `int` | timestamp Unix, formaté en UTC en IMF-fixdate (RFC 7231) |
+| `string` | passé tel quel (échappatoire pour formats exotiques) |
+| `DateTimeInterface` | converti en UTC, formaté en IMF-fixdate |
+| `null` ou absent | l'attribut `Expires` n'est pas émis |
+
+#### Validation des entrées
+
+- **Nom** : grammaire RFC 7230 `token` strict (lettres, chiffres, `! # $ % & ' * + - . ^ _ \` | ~`). Espace, séparateurs (`( ) < > @ , ; : \ " / [ ] ? = { }`) et contrôles → exception.
+- **Valeur** : refus des caractères de contrôle ASCII (0x00–0x1F + 0x7F) et `;` qui briseraient le parsing. Whitespace, `"`, `,`, `\` tolérés pour interop (techniquement non strict RFC 6265). Valeur vide acceptée (utilisée par `expireSetCookieHeader`).
+
+### `expireSetCookieHeader( string $name , array $options = [] ) : string`
+
+Émet un `Set-Cookie` de suppression : `value=''` + `Max-Age=0`. Réutilisez les mêmes `Path` / `Domain` / `SameSite` que ceux utilisés pour poser le cookie, sinon le navigateur ne fera pas correspondre la suppression.
 
 ```php
 use function oihana\http\helpers\cookies\expireSetCookieHeader ;
 
-use oihana\http\enums\CookieAttribute ;
+use oihana\http\enums\CookieOption ;
 
-$header = expireSetCookieHeader( 'session' ,
-[
-    CookieAttribute::PATH   => '/'           ,
-    CookieAttribute::DOMAIN => 'example.com' ,
-]) ;
-
-// session=; Domain=example.com; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Max-Age=0
+$header = expireSetCookieHeader
+(
+    'session' ,
+    [
+        CookieOption::PATH   => '/'           ,
+        CookieOption::DOMAIN => 'example.com' ,
+        CookieOption::SECURE => true          ,
+    ]
+) ;
+// session=; Path=/; Max-Age=0; SameSite=Lax; HttpOnly; Secure; Domain=example.com
 ```
 
-## Enum `CookieAttribute`
+## Parsers
 
-Constantes typées pour tous les attributs de cookie supportés par la spec.
+### `parseCookieHeader( string $header ) : array<string, string>`
 
-| Constante | Attribut d'en-tête | Type valeur |
-|---|---|---|
-| `CookieAttribute::DOMAIN` | `Domain` | `string` |
-| `CookieAttribute::PATH` | `Path` | `string` |
-| `CookieAttribute::EXPIRES` | `Expires` | chaîne date RFC 1123 |
-| `CookieAttribute::MAX_AGE` | `Max-Age` | `int` (secondes) |
-| `CookieAttribute::HTTP_ONLY` | `HttpOnly` | `bool` (présence seule, pas de valeur) |
-| `CookieAttribute::SECURE` | `Secure` | `bool` |
-| `CookieAttribute::SAME_SITE` | `SameSite` | valeur `SameSite::*` |
-| `CookieAttribute::PRIORITY` | `Priority` | `string` (`Low` / `Medium` / `High`) |
-| `CookieAttribute::PARTITIONED` | `Partitioned` | `bool` |
-
-## Enum `SameSite`
-
-| Constante | Valeur d'en-tête | Signification |
-|---|---|---|
-| `SameSite::STRICT` | `Strict` | Cookie envoyé **uniquement** sur les requêtes same-site — le plus dur, casse les liens cross-site vers des pages authentifiées. |
-| `SameSite::LAX` | `Lax` | Cookie envoyé sur les requêtes same-site + navigation top-level en GET. Default navigateur depuis 2020. |
-| `SameSite::NONE` | `None` | Cookie envoyé sur toutes les requêtes cross-site. **Requiert `Secure=true`** — les navigateurs rejettent `SameSite=None` sur HTTP en clair. |
-
-## Valeurs par défaut défensives
-
-Pour des cookies de session derrière HTTPS, la baseline recommandée est :
+Parse une valeur d'en-tête `Cookie:` (côté requête) en map `nom → valeur`. Réciproque de `buildSetCookieHeader` côté lecture.
 
 ```php
-CookieAttribute::HTTP_ONLY => true              ,
-CookieAttribute::SECURE    => true              ,
-CookieAttribute::SAME_SITE => SameSite::STRICT  ,
-CookieAttribute::PATH      => '/'               ,
+use function oihana\http\helpers\cookies\parseCookieHeader ;
+
+parseCookieHeader( 'PHPSESSID=abc; user=jane' ) ;
+// [ 'PHPSESSID' => 'abc' , 'user' => 'jane' ]
 ```
 
-Passez `SameSite` à `LAX` uniquement si vous avez besoin que les cookies survivent à des navigations top-level GET depuis des sites externes (cas typique des callbacks SSO).
+- Split sur le **premier** `=` (les valeurs peuvent légitimement contenir `=`, ex. padding base64).
+- Valeurs retournées **verbatim**, pas d'URL-decode automatique (à vous de faire si nécessaire).
+- En cas de doublon, **la dernière occurrence gagne** — comme `$_COOKIE`.
+
+### `parseSetCookieHeader( string $header ) : array`
+
+Parse une ligne `Set-Cookie` complète en tuple `{name, value, attributes}`. Pratique en tests pour asserter la structure d'un header généré, ou pour inspecter un cookie posé par un service amont.
+
+```php
+use function oihana\http\helpers\cookies\parseSetCookieHeader ;
+
+use oihana\http\enums\CookieAttribute ;
+use oihana\http\enums\SetCookieField ;
+
+$parsed = parseSetCookieHeader( 'access_token=abc; Path=/; Max-Age=3600; HttpOnly' ) ;
+
+$parsed[ SetCookieField::NAME       ] ; // 'access_token'
+$parsed[ SetCookieField::VALUE      ] ; // 'abc'
+$parsed[ SetCookieField::ATTRIBUTES ] ;
+// [
+//   'Path'     => '/' ,
+//   'Max-Age'  => '3600' ,
+//   'HttpOnly' => true ,
+// ]
+```
+
+Les noms d'attributs sont normalisés à la casse canonique via le lookup `CookieAttribute` (ex. `path=/` du wire devient `Path=/` dans la sortie).
+
+## Validation autonome
+
+### `validateCookieName( string $name ) : void`
+### `validateCookieValue( string $value ) : void`
+
+Exposés publiquement pour permettre au code applicatif de valider une entrée utilisateur **avant** de l'injecter dans un cookie. Throw `InvalidArgumentException` en cas d'invalide.
+
+## Vocabulaires (enums)
+
+### `CookieOption` — clés du tableau `$options`
+
+| Constante | Clé | Valeur typique |
+|---|---|---|
+| `DOMAIN` | `'domain'` | `string` ou vide pour skip |
+| `EXPIRES` | `'expires'` | `int\|string\|DateTimeInterface\|null` |
+| `HTTP_ONLY` | `'httpOnly'` | `bool`, défaut `true` |
+| `PARTITIONED` | `'partitioned'` | `bool`, défaut `false` |
+| `PATH` | `'path'` | `string`, défaut `'/'` |
+| `PRIORITY` | `'priority'` | constante `CookiePriority` ou `null` |
+| `SAME_SITE` | `'sameSite'` | constante `SameSite`, défaut `LAX` |
+| `SECURE` | `'secure'` | `bool`, défaut `false` |
+
+### `CookieAttribute` — noms wire-format (côté lecture)
+
+| Constante | Wire | Notes |
+|---|---|---|
+| `DOMAIN` | `Domain` | |
+| `EXPIRES` | `Expires` | IMF-fixdate RFC 7231 |
+| `HTTP_ONLY` | `HttpOnly` | flag |
+| `MAX_AGE` | `Max-Age` | secondes |
+| `PARTITIONED` | `Partitioned` | flag (CHIPS) |
+| `PATH` | `Path` | |
+| `PRIORITY` | `Priority` | `CookiePriority` |
+| `SAME_SITE` | `SameSite` | `SameSite::*` |
+| `SECURE` | `Secure` | flag |
+
+### `SameSite`
+
+| Constante | Valeur | Signification |
+|---|---|---|
+| `STRICT` | `Strict` | envoi uniquement same-site — le plus dur, casse les liens cross-site authentifiés |
+| `LAX` | `Lax` | same-site + navigation top-level GET. Default browsers depuis 2020. |
+| `NONE` | `None` | toutes requêtes cross-site. **Requiert `Secure=true`** |
+
+### `CookiePriority`
+
+| Constante | Valeur | Politique d'éviction |
+|---|---|---|
+| `LOW` | `Low` | évicté en premier sous pression de quota |
+| `MEDIUM` | `Medium` | défaut quand l'attribut est absent |
+| `HIGH` | `High` | évicté en dernier — réserver aux cookies de session critiques |
+
+### `SetCookieField` — clés du tuple retourné par `parseSetCookieHeader`
+
+| Constante | Clé | Contenu |
+|---|---|---|
+| `NAME` | `'name'` | nom du cookie |
+| `VALUE` | `'value'` | valeur (verbatim) |
+| `ATTRIBUTES` | `'attributes'` | map des attributs (`array<string, string\|true>`) |
+
+## Baseline défensive
+
+Pour un cookie de session derrière HTTPS, la recette recommandée :
+
+```php
+buildSetCookieHeader( 'session' , $token , 3600 ,
+[
+    CookieOption::SECURE    => true              ,
+    CookieOption::SAME_SITE => SameSite::STRICT  ,
+    CookieOption::PATH      => '/'               ,
+])
+```
+
+`HttpOnly` est `true` par défaut. Passez `SameSite::LAX` uniquement si vous avez besoin que le cookie survive aux navigations top-level GET depuis des sites externes (typique des callbacks SSO).

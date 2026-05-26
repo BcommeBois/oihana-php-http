@@ -1,13 +1,16 @@
 # Motifs de route
 
-Deux petits mais récurrents problèmes quand on travaille avec les motifs de route style Slim :
+Le dossier `helpers/` contient cinq helpers pour manipuler les motifs de route style Slim, à toutes les étapes du cycle de vie :
 
-1. Un motif portant des **segments optionnels entre crochets** (`/users[/{id:[0-9]+}]`) enregistre une seule route Slim qui sert plusieurs formes d'URL. Les outils qui ont besoin d'une correspondance 1:1 entre une ligne de route et autre chose (permission seedée, policy Casbin, chemin OpenAPI auto-généré) doivent d'abord expanser chaque optionnel en ses variantes concrètes.
-2. **Traduire un motif Slim en motif de policy Casbin** demande de collapser chaque `{placeholder}` en `*` (wildcard Casbin) en préservant la structure du chemin.
+1. **Expansion** des segments optionnels entre crochets en variantes concrètes.
+2. **Conversion** vers les motifs Casbin (pour le *seeding* de policy ou OpenAPI offline).
+3. **Compilation** en regex avec captures nommées.
+4. **Matching** d'un path concret contre un motif (extraction des args).
+5. **Conversion** vers Casbin depuis une requête PSR-7 vivante (la version Request-aware historique).
 
-`oihana/php-http` fournit un helper pour chacun.
+## Expansion des optionnels
 
-## `expandOptionalSegments( string $pattern ) : array`
+### `expandOptionalSegments( string $pattern ) : array`
 
 Retourne un tableau de variantes concrètes à partir d'un motif Slim portant des segments optionnels entre crochets.
 
@@ -29,69 +32,113 @@ expandOptionalSegments( '/users[/{id:[0-9]+}][/{action}]' ) ;
 // ]
 ```
 
-### Les crochets dans `{...}` ne sont PAS des groupes optionnels
+Les crochets dans `{...}` (par ex. `[0-9]` dans `{id:[0-9]+}`) font partie d'une classe de caractères regex et **ne sont pas** traités comme des segments optionnels. La fonction suit la profondeur des accolades pour les distinguer.
 
-`[0-9]` à l'intérieur de `{id:[0-9]+}` fait partie d'une classe de caractères regex — Slim le parse comme la contrainte sur le placeholder `id`. L'implémentation suit la profondeur des accolades et **ne traite pas** les crochets dans `{...}` comme des segments optionnels.
+## Compilation en regex
 
-```php
-expandOptionalSegments( '/items/{key:[A-Z]{2,4}}' ) ;
-// [ '/items/{key:[A-Z]{2,4}}' ]   // pas d'expansion, les crochets sont dans {...}
-```
+### `slimToRegex( string $pattern ) : string`
 
-### Usage pratique
-
-Le *seeding* des permissions dans `oihana/php-auth` appelle ce helper avant de mapper chaque motif concret à une policy Casbin. Idem pour la commande de test d'intégration `AuthTestServiceProbeCommand` quand elle parcourt le registre des routes Slim pour vérifier que chaque paire verbe-chemin annoncée a une permission.
-
-## `casbinRoutePattern( string $slimPattern ) : string`
-
-Traduit un motif de route Slim (après expansion des optionnels) en motif de policy Casbin en collapsant `{placeholder}` en `*`.
+Compile un motif Slim en regex PHP avec captures nommées. Foundation des autres helpers de matching.
 
 ```php
-use function oihana\http\helpers\casbinRoutePattern ;
+use function oihana\http\helpers\slimToRegex ;
 
-casbinRoutePattern( '/users/{id}' ) ;
-// '/users/*'
+slimToRegex( '/users/{id:[0-9]+}' ) ;
+// '/^\/users\/(?P<id>[0-9]+)$/'
 
-casbinRoutePattern( '/users/{id}/sessions/{sid}' ) ;
-// '/users/*/sessions/*'
+slimToRegex( '/users[/{id:[0-9]+}]' ) ;
+// '/^\/users(?:\/(?P<id>[0-9]+))?$/'
 
-casbinRoutePattern( '/products' ) ;
-// '/products'  (pas de placeholder, retourné tel quel)
-
-casbinRoutePattern( '/items/{key:[A-Z]{2,4}}' ) ;
-// '/items/*'  (contrainte supprimée avec le placeholder)
+slimToRegex( '/ip/{ip:[0-9]{1,3}\.[0-9]{1,3}}' ) ;
+// '/^\/ip\/(?P<ip>[0-9]{1,3}\.[0-9]{1,3})$/'
 ```
 
-### Usage avec les matchers Casbin
+Couvre :
+- placeholders simples (`{id}` → `(?P<id>[^\/]+)`)
+- contraintes regex (`{id:[0-9]+}`)
+- segments optionnels (`[...]` → `(?:...)?`)
+- quantifiers `{1,3}` dans les contraintes (brace-depth tracking)
+- échappement automatique du `/` que l'utilisateur écrit dans une contrainte sans le quoter
 
-Dans un fichier de policy Casbin, le motif résultant est matché avec `keyMatch2` ou `globMatch` :
+Throws `InvalidArgumentException` sur un `{` non fermé.
 
-```ini
-[matchers]
-m = keyMatch2( r.obj , p.obj ) && r.act == p.act
-```
+## Matching de path
 
-```csv
-p, role:editor, /users/*,             GET
-p, role:editor, /users/*/sessions/*,  GET
-```
+### `matchSlimPattern( string $pattern , string $path ) : ?array`
 
-## Combinaison des deux
+Wrap `slimToRegex` + `preg_match`. Retourne les args capturés en `array<string, string>`, ou `null` si pas de match. Les placeholders optionnels non matchés sont **omis** du résultat (utilisez `isset()` pour tester la présence).
 
 ```php
+use function oihana\http\helpers\matchSlimPattern ;
+
+matchSlimPattern( '/users/{id:[0-9]+}' , '/users/42' ) ;
+// [ 'id' => '42' ]
+
+matchSlimPattern( '/users/{id:[0-9]+}' , '/users/abc' ) ;
+// null (la contrainte a échoué)
+
+matchSlimPattern( '/users[/{id:[0-9]+}]' , '/users' ) ;
+// [] (matché, pas d'args capturés)
+
+matchSlimPattern( '/users[/{id:[0-9]+}]' , '/users/42' ) ;
+// [ 'id' => '42' ]
+```
+
+Cas d'usage :
+- *seeding* de permissions depuis une table de routes sans requête vivante (Casbin policy generation, `AuthRoutesDumpCommand`-style tooling, OpenAPI)
+- tests unitaires de motifs Slim en isolation
+- routing léger en entry points non-Slim
+
+## Conversion vers Casbin
+
+### `slimToCasbinPattern( string $pattern ) : string`
+
+Version **pure-string** de `casbinRoutePattern`. Remplace chaque `{name}` / `{name:regex}` par `:name`. Les `[...]` optionnels sont **préservés** — composez avec `expandOptionalSegments` pour obtenir une entrée Casbin par variante concrète.
+
+```php
+use function oihana\http\helpers\slimToCasbinPattern ;
 use function oihana\http\helpers\expandOptionalSegments ;
-use function oihana\http\helpers\casbinRoutePattern ;
 
-$slim = '/users[/{id}[/{action}]]' ;
-foreach ( expandOptionalSegments( $slim ) as $concrete )
+slimToCasbinPattern( '/users/{id:[0-9]+}' ) ;
+// '/users/:id'
+
+slimToCasbinPattern( '/users[/{id}]' ) ;
+// '/users[/:id]'  (crochets préservés)
+
+// Workflow seeding : expansion puis conversion
+foreach ( expandOptionalSegments( '/users[/{id:[0-9]+}]' ) as $variant )
 {
-    echo $concrete . '  →  ' . casbinRoutePattern( $concrete ) . PHP_EOL ;
+    $canonical = slimToCasbinPattern( $variant ) ;
+    // '/users' puis '/users/:id'
 }
-
-// /users                    →  /users
-// /users/{id}               →  /users/*
-// /users/{id}/{action}      →  /users/*/*
-// /users/{action}           →  /users/*
 ```
 
-Notez le doublon légitime `/users/*` — quand deux variantes concrètes collapsent vers le même motif Casbin, dédupliquez avant le seeding.
+### `casbinRoutePattern( ServerRequestInterface $request ) : string`
+
+Variante **Request-aware** historique : inspecte la route Slim vivante via `RouteContext::fromRequest()` et substitue chaque segment du path qui matche une valeur d'argument capturée par `:name`. Pratique dans un middleware où vous avez déjà la requête en main.
+
+```php
+use function oihana\http\helpers\casbinRoutePattern ;
+
+// GET /users/42 (Slim pattern : /users/{id:[0-9]+})
+casbinRoutePattern( $request ) ; // '/users/:id'
+
+// DELETE /policies/75459030 (Slim pattern : /policies[/{id:[0-9]+}])
+casbinRoutePattern( $request ) ; // '/policies/:id'
+```
+
+Fallback sur le path brut si aucune route Slim n'est attachée.
+
+## Résumé : quelle fonction utiliser ?
+
+| Besoin | Helper |
+|---|---|
+| À partir d'une **requête vivante** Slim | `casbinRoutePattern` |
+| À partir d'une **chaîne de pattern** | `slimToCasbinPattern` |
+| **Lister** toutes les variantes d'un pattern avec optionnels | `expandOptionalSegments` |
+| **Compiler** en regex pour matching custom | `slimToRegex` |
+| **Matcher** un path et extraire les args | `matchSlimPattern` |
+
+## Voir aussi
+
+- [Démarrage](getting-started.md) — exemple complet de seeding Casbin.

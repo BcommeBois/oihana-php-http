@@ -1,15 +1,18 @@
 # Route patterns
 
-Two small but recurring problems when working with Slim-style route patterns:
+The `helpers/` folder ships five helpers for manipulating Slim-style route patterns, at every stage of the lifecycle:
 
-1. A pattern carrying **optional bracket segments** (`/users[/{id:[0-9]+}]`) registers a single Slim route serving multiple URL shapes. Tools that need a 1:1 mapping between a route row and something else (a seeded permission, a Casbin policy, an auto-generated OpenAPI path) must expand each optional into its concrete variants first.
-2. **Translating a Slim pattern to a Casbin policy pattern** requires collapsing every `{placeholder}` into `*` (Casbin's wildcard) while preserving the path structure.
+1. **Expansion** of bracketed optional segments into concrete variants.
+2. **Conversion** to Casbin patterns (for policy seeding or offline OpenAPI).
+3. **Compilation** to a regex with named captures.
+4. **Matching** a concrete path against a pattern (args extraction).
+5. **Conversion** to Casbin from a live PSR-7 request (the historical Request-aware variant).
 
-`oihana/php-http` ships one helper for each.
+## Optional segment expansion
 
-## `expandOptionalSegments( string $pattern ) : array`
+### `expandOptionalSegments( string $pattern ) : array`
 
-Returns an array of concrete pattern variants from a Slim pattern carrying optional bracket segments.
+Returns an array of concrete variants from a Slim pattern with bracketed optional segments.
 
 ```php
 use function oihana\http\helpers\expandOptionalSegments ;
@@ -29,69 +32,113 @@ expandOptionalSegments( '/users[/{id:[0-9]+}][/{action}]' ) ;
 // ]
 ```
 
-### Brackets inside `{...}` are NOT optional groups
+Brackets inside `{...}` (e.g. `[0-9]` inside `{id:[0-9]+}`) are part of a regex character class and are **not** treated as optional segments. The function tracks brace depth to distinguish them.
 
-`[0-9]` inside `{id:[0-9]+}` is part of a regex character class — Slim parses it as the constraint on the `id` placeholder. The implementation tracks brace depth and **does not** treat brackets inside `{...}` as optional segments.
+## Regex compilation
 
-```php
-expandOptionalSegments( '/items/{key:[A-Z]{2,4}}' ) ;
-// [ '/items/{key:[A-Z]{2,4}}' ]   // no expansion, the brackets are inside {...}
-```
+### `slimToRegex( string $pattern ) : string`
 
-### Practical use
-
-Permission seeding in `oihana/php-auth` calls this helper before mapping each concrete pattern to a Casbin policy. So does the integration test command `AuthTestServiceProbeCommand` when it walks Slim's route registry to check that every advertised verb-path pair has a permission.
-
-## `casbinRoutePattern( string $slimPattern ) : string`
-
-Translates a Slim route pattern (after optional-segment expansion) into a Casbin policy pattern by collapsing `{placeholder}` into `*`.
+Compiles a Slim pattern into a PHP regex with named captures. Foundation of the other matching helpers.
 
 ```php
-use function oihana\http\helpers\casbinRoutePattern ;
+use function oihana\http\helpers\slimToRegex ;
 
-casbinRoutePattern( '/users/{id}' ) ;
-// '/users/*'
+slimToRegex( '/users/{id:[0-9]+}' ) ;
+// '/^\/users\/(?P<id>[0-9]+)$/'
 
-casbinRoutePattern( '/users/{id}/sessions/{sid}' ) ;
-// '/users/*/sessions/*'
+slimToRegex( '/users[/{id:[0-9]+}]' ) ;
+// '/^\/users(?:\/(?P<id>[0-9]+))?$/'
 
-casbinRoutePattern( '/products' ) ;
-// '/products'  (no placeholders, returned as-is)
-
-casbinRoutePattern( '/items/{key:[A-Z]{2,4}}' ) ;
-// '/items/*'  (constraint stripped along with the placeholder)
+slimToRegex( '/ip/{ip:[0-9]{1,3}\.[0-9]{1,3}}' ) ;
+// '/^\/ip\/(?P<ip>[0-9]{1,3}\.[0-9]{1,3})$/'
 ```
 
-### Use with Casbin matchers
+Covers:
+- bare placeholders (`{id}` → `(?P<id>[^\/]+)`)
+- regex constraints (`{id:[0-9]+}`)
+- optional segments (`[...]` → `(?:...)?`)
+- `{1,3}` quantifiers inside constraints (brace-depth tracking)
+- automatic escaping of the user-written `/` inside a constraint
 
-In a Casbin policy file, the resulting pattern is matched with `keyMatch2` or `globMatch`:
+Throws `InvalidArgumentException` on an unmatched `{`.
 
-```ini
-[matchers]
-m = keyMatch2( r.obj , p.obj ) && r.act == p.act
-```
+## Path matching
 
-```csv
-p, role:editor, /users/*,             GET
-p, role:editor, /users/*/sessions/*,  GET
-```
+### `matchSlimPattern( string $pattern , string $path ) : ?array`
 
-## Combining the two
+Wraps `slimToRegex` + `preg_match`. Returns the captured args as `array<string, string>`, or `null` if no match. Optional placeholders that didn't match are **omitted** from the result (use `isset()` to test presence).
 
 ```php
+use function oihana\http\helpers\matchSlimPattern ;
+
+matchSlimPattern( '/users/{id:[0-9]+}' , '/users/42' ) ;
+// [ 'id' => '42' ]
+
+matchSlimPattern( '/users/{id:[0-9]+}' , '/users/abc' ) ;
+// null (constraint failed)
+
+matchSlimPattern( '/users[/{id:[0-9]+}]' , '/users' ) ;
+// [] (matched, no args captured)
+
+matchSlimPattern( '/users[/{id:[0-9]+}]' , '/users/42' ) ;
+// [ 'id' => '42' ]
+```
+
+Use cases:
+- permission seeding from a route table without a live request (Casbin policy generation, `AuthRoutesDumpCommand`-style tooling, OpenAPI)
+- unit-testing Slim patterns in isolation
+- lightweight routing in non-Slim entry points
+
+## Casbin conversion
+
+### `slimToCasbinPattern( string $pattern ) : string`
+
+**Pure-string** version of `casbinRoutePattern`. Replaces every `{name}` / `{name:regex}` with `:name`. Optional `[...]` are **preserved** — compose with `expandOptionalSegments` to get one Casbin entry per concrete variant.
+
+```php
+use function oihana\http\helpers\slimToCasbinPattern ;
 use function oihana\http\helpers\expandOptionalSegments ;
-use function oihana\http\helpers\casbinRoutePattern ;
 
-$slim = '/users[/{id}[/{action}]]' ;
-foreach ( expandOptionalSegments( $slim ) as $concrete )
+slimToCasbinPattern( '/users/{id:[0-9]+}' ) ;
+// '/users/:id'
+
+slimToCasbinPattern( '/users[/{id}]' ) ;
+// '/users[/:id]'  (brackets preserved)
+
+// Seeding workflow: expansion then conversion
+foreach ( expandOptionalSegments( '/users[/{id:[0-9]+}]' ) as $variant )
 {
-    echo $concrete . '  →  ' . casbinRoutePattern( $concrete ) . PHP_EOL ;
+    $canonical = slimToCasbinPattern( $variant ) ;
+    // '/users' then '/users/:id'
 }
-
-// /users                    →  /users
-// /users/{id}               →  /users/*
-// /users/{id}/{action}      →  /users/*/*
-// /users/{action}           →  /users/*
 ```
 
-Note the legitimate duplicate `/users/*` — when two concrete variants collapse to the same Casbin pattern, deduplicate before seeding.
+### `casbinRoutePattern( ServerRequestInterface $request ) : string`
+
+Historical **Request-aware** variant: inspects the live Slim route via `RouteContext::fromRequest()` and substitutes each path segment that matches a captured argument value with `:name`. Handy in a middleware where you already hold the request.
+
+```php
+use function oihana\http\helpers\casbinRoutePattern ;
+
+// GET /users/42 (Slim pattern: /users/{id:[0-9]+})
+casbinRoutePattern( $request ) ; // '/users/:id'
+
+// DELETE /policies/75459030 (Slim pattern: /policies[/{id:[0-9]+}])
+casbinRoutePattern( $request ) ; // '/policies/:id'
+```
+
+Falls back to the raw path when no Slim route is attached.
+
+## Summary: which one to use?
+
+| Need | Helper |
+|---|---|
+| From a **live** Slim request | `casbinRoutePattern` |
+| From a **pattern string** | `slimToCasbinPattern` |
+| **List** all variants of a pattern with optionals | `expandOptionalSegments` |
+| **Compile** to a regex for custom matching | `slimToRegex` |
+| **Match** a path and extract args | `matchSlimPattern` |
+
+## See also
+
+- [Getting started](getting-started.md) — full Casbin seeding example.
