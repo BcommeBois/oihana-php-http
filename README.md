@@ -25,7 +25,7 @@ composer require oihana/php-http
 ## ✨ What you can do
 
 - **Detect the real client IP** behind a chain of trusted reverse proxies. Walks `X-Forwarded-For` right-to-left, skips trusted hops via CIDR matching, falls back on `Forwarded` (RFC 7239), `X-Real-IP` and `REMOTE_ADDR`. Validates IPv4 and IPv6, normalizes IPv4-mapped IPv6 (`::ffff:1.2.3.4` → `1.2.3.4`), strips IPv6 zone IDs.
-- **Truncate IPs for GDPR-friendly logging** — `truncateIpToSlash24()` keeps the first three octets of an IPv4 and zeroes the last one. IPv6 is currently passed through unchanged.
+- **Anonymise IPs for GDPR-friendly logging** — `truncateIpToSlash24()` (IPv4 → `/24`, last octet zeroed) and `truncateIpToSlash48()` (IPv6 → `/48`, last 80 bits zeroed), or `anonymizeIp()` for a single entry point that routes to the right helper based on the address family.
 - **Build `Set-Cookie` headers** with typed attributes: `HttpOnly`, `Secure`, `SameSite=Strict|Lax|None`, `Domain`, `Path`, `Max-Age`.
 - **Expand Slim route patterns** carrying optional bracket segments (`/users[/{id:[0-9]+}]`) into their cartesian product of concrete routes — useful for permission seeding and route-by-route authorization.
 - **Translate Slim route patterns into Casbin patterns** by collapsing `{placeholder}` segments into `*`.

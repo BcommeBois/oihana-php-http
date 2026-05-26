@@ -51,6 +51,7 @@
             "src/oihana/http/helpers/cookies/validateCookieName.php" ,
             "src/oihana/http/helpers/cookies/validateCookieValue.php" ,
             "src/oihana/http/helpers/ips/acceptIp.php" ,
+            "src/oihana/http/helpers/ips/anonymizeIp.php" ,
             "src/oihana/http/helpers/ips/canonicalIp.php" ,
             "src/oihana/http/helpers/ips/extractIpCandidatesFromGlobals.php" ,
             "src/oihana/http/helpers/ips/extractIpCandidatesFromRequest.php" ,
@@ -60,6 +61,7 @@
             "src/oihana/http/helpers/ips/isPublicIp.php" ,
             "src/oihana/http/helpers/ips/parseForwardedHeader.php" ,
             "src/oihana/http/helpers/ips/truncateIpToSlash24.php" ,
+            "src/oihana/http/helpers/ips/truncateIpToSlash48.php" ,
             "src/oihana/http/helpers/ips/walkForwardedChain.php"
         ]
     } ,
