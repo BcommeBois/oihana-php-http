@@ -69,6 +69,13 @@
             "src/oihana/http/helpers/negotiation/parseAcceptLanguage.php" ,
             "src/oihana/http/helpers/negotiation/parseContentType.php" ,
 
+            "src/oihana/http/helpers/url/buildQueryString.php" ,
+            "src/oihana/http/helpers/url/isAbsoluteUrl.php" ,
+            "src/oihana/http/helpers/url/normalizeUrl.php" ,
+            "src/oihana/http/helpers/url/parseQueryString.php" ,
+            "src/oihana/http/helpers/url/removeQueryParam.php" ,
+            "src/oihana/http/helpers/url/withQueryParams.php" ,
+
             "src/oihana/http/helpers/cookies/buildSetCookieHeader.php" ,
             "src/oihana/http/helpers/cookies/expireSetCookieHeader.php" ,
             "src/oihana/http/helpers/cookies/parseCookieHeader.php" ,
