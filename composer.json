@@ -67,9 +67,7 @@
             "src/oihana/http/helpers/request/wantsJson.php" ,
 
             "src/oihana/http/helpers/negotiation/negotiate.php" ,
-            "src/oihana/http/helpers/negotiation/parseAcceptEncoding.php" ,
             "src/oihana/http/helpers/negotiation/parseAcceptHeader.php" ,
-            "src/oihana/http/helpers/negotiation/parseAcceptLanguage.php" ,
             "src/oihana/http/helpers/negotiation/parseContentType.php" ,
 
             "src/oihana/http/helpers/url/buildQueryString.php" ,

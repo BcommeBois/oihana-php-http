@@ -5,11 +5,10 @@ namespace oihana\http\enums ;
 use oihana\reflect\traits\ConstantsTrait ;
 
 /**
- * Field names of the entries returned by the `Accept*`-header
- * parsers under `oihana\http\helpers\negotiation` :
+ * Field names of the entries returned by
  * {@see \oihana\http\helpers\negotiation\parseAcceptHeader()},
- * {@see \oihana\http\helpers\negotiation\parseAcceptLanguage()} and
- * {@see \oihana\http\helpers\negotiation\parseAcceptEncoding()}.
+ * the universal `Accept*`-header parser
+ * (covers `Accept`, `Accept-Language` and `Accept-Encoding`).
  *
  * Centralises the array keys so consumers can avoid magic strings.
  *

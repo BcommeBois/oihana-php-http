@@ -29,22 +29,23 @@ Conventions :
 - Les valeurs entre guillemets (`"…"`) sont déballées.
 - `q=0` est conservé (refus explicite) et atterrit en queue.
 
-### `parseAcceptLanguage( string $header ) : array`
-### `parseAcceptEncoding( string $header ) : array`
+### Pour `Accept-Language` et `Accept-Encoding`
 
-Wrappers 1-ligne autour de `parseAcceptHeader`. Existent pour la discoverabilité au call site. Tags de langue lowercasés (RFC 4647 §3.3.1).
+Les trois en-têtes (`Accept`, `Accept-Language`, `Accept-Encoding`) partagent la même grammaire RFC 7231 §5.3 — `parseAcceptHeader()` est donc le point d'entrée unique. Le DTO retourné est identique pour les trois ; seul le sens conventionnel du champ `type` change (media type, tag de langue, ou nom d'encoding).
 
 ```php
-parseAcceptLanguage( 'fr-FR,fr;q=0.9,en;q=0.7' ) ;
+parseAcceptHeader( 'fr-FR,fr;q=0.9,en;q=0.7' ) ;
 // [
 //   [ type => 'fr-fr' , quality => 1.0 , params => [] ] ,
 //   [ type => 'fr'    , quality => 0.9 , params => [] ] ,
 //   [ type => 'en'    , quality => 0.7 , params => [] ] ,
 // ]
 
-parseAcceptEncoding( 'gzip, deflate, br;q=1.0' ) ;
+parseAcceptHeader( 'gzip, deflate, br;q=1.0' ) ;
 // [ entries gzip, deflate, br ]
 ```
+
+Pour `Accept-Language` : les tags sont lowercased (RFC 4647 §3.3.1, comparaison case-insensitive).
 
 ## Sélection du meilleur match
 

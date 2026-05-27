@@ -29,22 +29,23 @@ Conventions:
 - Quoted values (`"…"`) are unwrapped.
 - `q=0` is kept (explicit refusal) and lands last.
 
-### `parseAcceptLanguage( string $header ) : array`
-### `parseAcceptEncoding( string $header ) : array`
+### For `Accept-Language` and `Accept-Encoding`
 
-One-line wrappers around `parseAcceptHeader`. They exist for call-site discoverability. Language tags lowercased (RFC 4647 §3.3.1).
+The three headers (`Accept`, `Accept-Language`, `Accept-Encoding`) share the same RFC 7231 §5.3 grammar — `parseAcceptHeader()` is therefore the single entry point. The returned DTO is identical for the three; only the conventional meaning of the `type` field differs (media type, language tag, encoding name).
 
 ```php
-parseAcceptLanguage( 'fr-FR,fr;q=0.9,en;q=0.7' ) ;
+parseAcceptHeader( 'fr-FR,fr;q=0.9,en;q=0.7' ) ;
 // [
 //   [ type => 'fr-fr' , quality => 1.0 , params => [] ] ,
 //   [ type => 'fr'    , quality => 0.9 , params => [] ] ,
 //   [ type => 'en'    , quality => 0.7 , params => [] ] ,
 // ]
 
-parseAcceptEncoding( 'gzip, deflate, br;q=1.0' ) ;
+parseAcceptHeader( 'gzip, deflate, br;q=1.0' ) ;
 // [ gzip, deflate, br entries ]
 ```
+
+For `Accept-Language`: tags are lowercased (RFC 4647 §3.3.1, case-insensitive comparison).
 
 ## Best-match selection
 
