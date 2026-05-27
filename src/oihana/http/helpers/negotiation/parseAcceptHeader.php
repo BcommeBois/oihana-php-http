@@ -4,14 +4,21 @@ namespace oihana\http\helpers\negotiation ;
 
 use oihana\http\enums\AcceptField ;
 
+use function oihana\core\strings\parseParameters ;
+use function oihana\core\strings\splitOutsideQuotes ;
+
 /**
  * Parses an `Accept`-style HTTP request header (RFC 7231 §5.3) into
  * a list of entries sorted by q-value in descending order.
  *
- * Works for any `Accept*` header that follows the same syntax —
- * dedicated wrappers {@see parseAcceptLanguage()} and
- * {@see parseAcceptEncoding()} delegate to this helper for the
- * `Accept-Language` and `Accept-Encoding` variants.
+ * Works for **any** header that follows the RFC 7231 §5.3
+ * `Accept*` grammar — call it directly for `Accept`,
+ * `Accept-Language` (RFC 4647 — language tags are lowercased,
+ * matching RFC 4647 §3.3.1 case-insensitive comparison) and
+ * `Accept-Encoding` (RFC 7231 §5.3.4). The returned structure is
+ * identical for the three; the conventional vocabulary just
+ * differs in what the `type` field carries (a media type, a
+ * language tag, or an encoding name).
  *
  * Each returned entry is keyed with {@see AcceptField} constants:
  * - {@see AcceptField::TYPE} — the negotiated value
@@ -57,99 +64,63 @@ function parseAcceptHeader( string $header ) :array
     }
 
     $entries = [] ;
-    $order   = 0 ;
 
-    foreach ( explode( ',' , $header ) as $rawEntry )
+    // Split on `,` while respecting quoted regions — defensive against
+    // pathological cases like `text/html;q="0,1", application/json`.
+    foreach ( splitOutsideQuotes( $header , ',' , true ) as $rawEntry )
     {
-        $rawEntry = trim( $rawEntry ) ;
-
         if ( $rawEntry === '' )
         {
             continue ;
         }
 
-        $segments = array_map( 'trim' , explode( ';' , $rawEntry ) ) ;
+        // Split type from params on the first `;` outside of quotes.
+        $semi = strpos( $rawEntry , ';' ) ;
 
-        $type = strtolower( array_shift( $segments ) ?? '' ) ;
+        if ( $semi === false )
+        {
+            $type   = strtolower( $rawEntry ) ;
+            $params = [] ;
+        }
+        else
+        {
+            $type   = strtolower( trim( substr( $rawEntry , 0 , $semi ) ) ) ;
+            $params = parseParameters( substr( $rawEntry , $semi + 1 ) , ';' , '=' , true ) ;
+        }
 
         if ( $type === '' )
         {
             continue ;
         }
 
+        // `q` is the special quality parameter; lift it out of the
+        // generic params map after parsing.
         $quality = 1.0 ;
-        $params  = [] ;
-
-        foreach ( $segments as $segment )
+        if ( isset( $params[ 'q' ] ) )
         {
-            if ( $segment === '' )
+            if ( is_numeric( $params[ 'q' ] ) )
             {
-                continue ;
+                $quality = max( 0.0 , min( 1.0 , (float) $params[ 'q' ] ) ) ;
             }
-
-            $eq = strpos( $segment , '=' ) ;
-
-            if ( $eq === false )
-            {
-                $params[ strtolower( $segment ) ] = '' ;
-                continue ;
-            }
-
-            $name  = strtolower( trim( substr( $segment , 0 , $eq ) ) ) ;
-            $value = trim( substr( $segment , $eq + 1 ) ) ;
-
-            if ( $name === '' )
-            {
-                continue ;
-            }
-
-            // Strip surrounding quotes from RFC 7230 quoted-string values.
-            if ( strlen( $value ) >= 2 && $value[ 0 ] === '"' && $value[ -1 ] === '"' )
-            {
-                $value = substr( $value , 1 , -1 ) ;
-            }
-
-            if ( $name === 'q' )
-            {
-                if ( is_numeric( $value ) )
-                {
-                    $q = (float) $value ;
-                    if ( $q < 0.0 ) { $q = 0.0 ; }
-                    if ( $q > 1.0 ) { $q = 1.0 ; }
-                    $quality = $q ;
-                }
-                continue ;
-            }
-
-            $params[ $name ] = $value ;
+            unset( $params[ 'q' ] ) ;
         }
 
         $entries[] =
         [
-            'order' => $order++ ,
             AcceptField::TYPE    => $type    ,
             AcceptField::QUALITY => $quality ,
             AcceptField::PARAMS  => $params  ,
         ] ;
     }
 
-    // Sort by q DESC, then by original order ASC (stable).
+    // Sort by q DESC. PHP >= 8.0 guarantees `usort` is stable, so
+    // entries with the same q-value naturally keep their insertion
+    // (i.e. header) order — no sentinel index needed.
     usort
     (
         $entries ,
-        fn( array $a , array $b ) :int =>
-            $b[ AcceptField::QUALITY ] <=> $a[ AcceptField::QUALITY ]
-            ?: $a[ 'order' ] <=> $b[ 'order' ] ,
+        fn( array $a , array $b ) :int => $b[ AcceptField::QUALITY ] <=> $a[ AcceptField::QUALITY ] ,
     ) ;
 
-    return array_map
-    (
-        fn( array $entry ) :array =>
-        [
-            AcceptField::TYPE    => $entry[ AcceptField::TYPE    ] ,
-            AcceptField::QUALITY => $entry[ AcceptField::QUALITY ] ,
-            AcceptField::PARAMS  => $entry[ AcceptField::PARAMS  ] ,
-        ] ,
-        $entries ,
-    ) ;
+    return $entries ;
 }

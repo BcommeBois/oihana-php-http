@@ -4,6 +4,8 @@ namespace oihana\http\helpers\negotiation ;
 
 use oihana\http\enums\ContentTypeField ;
 
+use function oihana\core\strings\parseParameters ;
+
 /**
  * Parses a `Content-Type` HTTP header value (RFC 7231 §3.1.1.1)
  * into a structured tuple keyed by {@see ContentTypeField}
@@ -67,61 +69,30 @@ function parseContentType( string $header ) :array
         ] ;
     }
 
-    $segments = array_map( 'trim' , explode( ';' , $header ) ) ;
-    $type     = strtolower( array_shift( $segments ) ?? '' ) ;
+    // Split type from params on the first `;`.
+    $semi = strpos( $header , ';' ) ;
 
-    $params   = [] ;
-    $charset  = null ;
-    $boundary = null ;
-
-    foreach ( $segments as $segment )
+    if ( $semi === false )
     {
-        if ( $segment === '' )
-        {
-            continue ;
-        }
-
-        $eq = strpos( $segment , '=' ) ;
-
-        if ( $eq === false )
-        {
-            // Flag-style parameter without a value (rare).
-            $params[ strtolower( $segment ) ] = '' ;
-            continue ;
-        }
-
-        $name  = strtolower( trim( substr( $segment , 0 , $eq ) ) ) ;
-        $value = trim( substr( $segment , $eq + 1 ) ) ;
-
-        if ( $name === '' )
-        {
-            continue ;
-        }
-
-        // Strip surrounding quotes from RFC 7230 quoted-string values.
-        if ( strlen( $value ) >= 2 && $value[ 0 ] === '"' && $value[ -1 ] === '"' )
-        {
-            $value = substr( $value , 1 , -1 ) ;
-        }
-
-        if ( $name === 'charset' )
-        {
-            // Charset names are case-insensitive — normalise for compares.
-            $charset = strtolower( $value ) ;
-            $params[ $name ] = $charset ;
-            continue ;
-        }
-
-        if ( $name === 'boundary' )
-        {
-            // Multipart boundary is case-sensitive — keep as-is.
-            $boundary = $value ;
-            $params[ $name ] = $value ;
-            continue ;
-        }
-
-        $params[ $name ] = $value ;
+        $type   = strtolower( trim( $header ) ) ;
+        $params = [] ;
     }
+    else
+    {
+        $type   = strtolower( trim( substr( $header , 0 , $semi ) ) ) ;
+        $params = parseParameters( substr( $header , $semi + 1 ) , ';' , '=' , true ) ;
+    }
+
+    // `charset` is case-insensitive per RFC — lowercase it in-place for both the dedicated key and the params map.
+    $charset = null ;
+    if ( isset( $params[ 'charset' ] ) )
+    {
+        $charset             = strtolower( $params[ 'charset' ] ) ;
+        $params[ 'charset' ] = $charset ;
+    }
+
+    // `boundary` is case-sensitive per RFC 2046 — keep as-is.
+    $boundary = $params[ 'boundary' ] ?? null ;
 
     return
     [

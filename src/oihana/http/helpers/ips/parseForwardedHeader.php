@@ -2,6 +2,8 @@
 
 namespace oihana\http\helpers\ips ;
 
+use function oihana\core\strings\unquote ;
+
 /**
  * Parses a {@code Forwarded} HTTP header (RFC 7239) and returns the
  * ordered list of `for=` IP addresses found in it.
@@ -76,11 +78,7 @@ function parseForwardedHeader( string $header ): array
                 continue ;
             }
 
-            // Strip surrounding quotes
-            if ( strlen( $value ) >= 2 && $value[ 0 ] === '"' && $value[ -1 ] === '"' )
-            {
-                $value = substr( $value , 1 , -1 ) ;
-            }
+            $value = unquote( $value ) ;
 
             // Bracketed IPv6, optionally with :port → [2001:db8::1]:4711
             if ( $value !== '' && $value[ 0 ] === '[' )
