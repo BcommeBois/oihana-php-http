@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.0.0] - 2026-05-27
 
-First public stable release. ~45 procedural helpers organised in seven sub-namespaces (`helpers/{auth,cookies,dates,ips,negotiation,request,signatures,url}`) plus the flat User-Agent helpers, 15 typed enum classes (zero magic strings across the surface), 482 PHPUnit tests, full bilingual EN/FR wiki. Two dependencies added during development: `oihana/php-schema` (for the `UserAgentInfo` DTO returned by `parseUserAgent`) and `oihana/php-standards` (for `DateFormat::RFC7231` used by HTTP date and cookie `Expires` formatting).
+First public stable release. ~45 procedural helpers organised in seven sub-namespaces (`helpers/{auth,cookies,dates,ips,negotiation,request,signatures,url}`) plus the flat User-Agent helpers, 15 typed enum classes (zero magic strings across the surface), 482 PHPUnit tests, full bilingual EN/FR wiki including a dedicated Security guide. Two dependencies added during development: `oihana/php-schema` (for the `UserAgentInfo` DTO returned by `parseUserAgent`) and `oihana/php-standards` (for `DateFormat::RFC7231` used by HTTP date and cookie `Expires` formatting).
 
 ### Changed
 

@@ -71,6 +71,10 @@ if ( !verifyHmacSignature( $payload , $sig , $webhookSecret ) )
 - **[User-Agent](user-agent.md)** — `parseUserAgent`, detect helpers, `isBotUserAgent`, `isMobileUserAgent`, enums `BrowserName` / `OsName` + `UserAgentInfo` DTO (`oihana/php-schema`).
 - **[HMAC signatures](signatures.md)** — `signUrl`, `verifySignedUrl`, `verifyHmacSignature` (Stripe / GitHub / Slack / Mailchimp).
 
+### Cross-cutting
+
+- **[Security](security.md)** — trusted-proxy model, GDPR anonymisation, cookie validation, constant-time HMAC, URL canonicalisation, strict base64url, anti-CRLF parsing, recommended baselines, what's NOT covered.
+
 ## Source code
 
 The library code lives under [`src/oihana/http/`](../../src/oihana/http/).
