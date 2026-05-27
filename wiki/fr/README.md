@@ -2,7 +2,7 @@
 
 ![Langue](https://img.shields.io/badge/langue-Français-blue)
 
-`oihana/php-http` est une bibliothèque PHP composable pour le code orienté HTTP : détection de l'IP réelle du client derrière les reverse proxies, anonymisation conforme RGPD, builders et parsers typés de cookies, helpers PSR-7 d'authentification et d'inspection de requête, négociation de contenu, dates HTTP, URL/query string, motifs de route style Slim, signatures HMAC pour URLs signées et webhooks, parser User-Agent. Compatible PSR-7, zéro chaîne magique, zéro dépendance externe (hors écosystème oihana).
+`oihana/php-http` est une bibliothèque PHP composable pour le code orienté HTTP : détection de l'IP réelle du client derrière les reverse proxies, anonymisation conforme RGPD, builders et parsers typés de cookies, helpers PSR-7 d'authentification et d'inspection de requête, négociation de contenu, dates HTTP, URL/query string, signatures HMAC pour URLs signées et webhooks, parser User-Agent. Compatible PSR-7, zéro chaîne magique, zéro dépendance externe (hors écosystème oihana).
 
 ## À qui s'adresse cette documentation
 
@@ -14,7 +14,6 @@ Aux développeurs PHP qui construisent une API derrière un ou plusieurs reverse
 - négocier le contenu (`Accept*`, `parseContentType`) ;
 - parser et formater les dates HTTP (RFC 7231 IMF-fixdate, RFC 850, asctime) ;
 - manipuler les URLs et query strings sans perdre les doublons ;
-- compiler / matcher / convertir des motifs de route Slim pour le seeding Casbin ou OpenAPI ;
 - signer des URLs avec TTL et vérifier des webhooks HMAC en temps constant ;
 - parser un User-Agent pour le routing analytics / bot detection.
 
@@ -63,14 +62,13 @@ if ( !verifyHmacSignature( $payload , $sig , $webhookSecret ) )
 - **[Cookies](cookies.md)** — `buildSetCookieHeader`, `expireSetCookieHeader`, `parseCookieHeader`, `parseSetCookieHeader`, validation `validateCookie{Name,Value}`, enums `CookieAttribute` / `CookieOption` / `CookiePriority` / `SameSite` / `SetCookieField`.
 - **[Authorization](authorization.md)** — `parseAuthorizationHeader`, `getBearerToken`, `getBasicAuth`, enums `AuthorizationField` / `BasicAuthField`.
 - **[Helpers de requête PSR-7](request.md)** — `wantsJson`, `isAjax`, `isHttpsRequest`.
-- **[Négociation de contenu](negotiation.md)** — `parseAcceptHeader` / `parseAcceptLanguage` / `parseAcceptEncoding`, `negotiate`, `parseContentType`, enums `AcceptField` / `ContentTypeField`.
+- **[Négociation de contenu](negotiation.md)** — `parseAcceptHeader` (universel pour `Accept`, `Accept-Language`, `Accept-Encoding`), `negotiate`, `parseContentType`, enums `AcceptField` / `ContentTypeField`.
 - **[Dates HTTP](dates.md)** — `parseHttpDate` (3 formats RFC 7231), `formatHttpDate` (IMF-fixdate).
 - **[URL / Query string](urls.md)** — `parseQueryString`, `buildQueryString`, `withQueryParams`, `removeQueryParam`, `normalizeUrl`, `isAbsoluteUrl`.
 
 ### Au-dessus
 
 - **[User-Agent](user-agent.md)** — `parseUserAgent`, detect helpers, `isBotUserAgent`, `isMobileUserAgent`, enums `BrowserName` / `OsName` + DTO `UserAgentInfo` (`oihana/php-schema`).
-- **[Motifs de route](route-patterns.md)** — `expandOptionalSegments`, `slimToRegex`, `matchSlimPattern`, `slimToCasbinPattern`, `casbinRoutePattern`.
 - **[Signatures HMAC](signatures.md)** — `signUrl`, `verifySignedUrl`, `verifyHmacSignature` (Stripe / GitHub / Slack / Mailchimp).
 
 ## Code source
@@ -80,7 +78,7 @@ Le code de la bibliothèque vit sous [`src/oihana/http/`](../../src/oihana/http/
 ## Voir aussi
 
 - [Packagist `oihana/php-http`](https://packagist.org/packages/oihana/php-http) — page du package.
-- [`oihana/php-auth`](https://github.com/BcommeBois/oihana-php-auth) — Casbin RBAC + JWT/OIDC ; consomme les helpers IP, cookies, motifs de route.
+- [`oihana/php-auth`](https://github.com/BcommeBois/oihana-php-auth) — Casbin RBAC + JWT/OIDC ; consomme les helpers IP et cookies.
 - [`oihana/php-enums`](https://github.com/BcommeBois/oihana-php-enums) — constantes HTTP typées (`HttpHeader`, `HttpStatusCode`, `AuthScheme`, …).
 - [`oihana/php-schema`](https://github.com/BcommeBois/oihana-php-schema) — DTO partagés (`UserAgentInfo`, `Session`, …).
 - [`oihana/php-standards`](https://github.com/BcommeBois/oihana-php-standards) — formats date standards (`DateFormat::RFC7231`).

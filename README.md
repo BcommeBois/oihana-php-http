@@ -2,7 +2,7 @@
 
 ![Oihana PHP Http](https://raw.githubusercontent.com/BcommeBois/oihana-php-http/main/assets/images/oihana-php-http-logo-inline-512x160.png)
 
-Composable PHP HTTP toolkit. Part of the **Oihana PHP** ecosystem, this package provides battle-tested helpers for HTTP-facing code: client IP detection against reverse proxies, GDPR-compliant anonymisation, typed `Set-Cookie` builders and parsers, PSR-7 authentication and request inspection helpers, content negotiation, HTTP dates, URL/query string toolkit, Slim route patterns, HMAC signatures for signed URLs and webhooks, User-Agent parser. PSR-7 compatible, zero magic strings.
+Composable PHP HTTP toolkit. Part of the **Oihana PHP** ecosystem, this package provides battle-tested helpers for HTTP-facing code: client IP detection against reverse proxies, GDPR-compliant anonymisation, typed `Set-Cookie` builders and parsers, PSR-7 authentication and request inspection helpers, content negotiation, HTTP dates, URL/query string toolkit, HMAC signatures for signed URLs and webhooks, User-Agent parser. PSR-7 compatible, zero magic strings.
 
 [![Latest Version](https://img.shields.io/packagist/v/oihana/php-http.svg?style=flat-square)](https://packagist.org/packages/oihana/php-http)
 [![Total Downloads](https://img.shields.io/packagist/dt/oihana/php-http.svg?style=flat-square)](https://packagist.org/packages/oihana/php-http)
@@ -40,7 +40,7 @@ composer require oihana/php-http
 
 ### Content negotiation
 
-- **`Accept*` parsers** — `parseAcceptHeader()`, `parseAcceptLanguage()`, `parseAcceptEncoding()` returning entries sorted by q-value, with stable order on ties.
+- **`Accept*` parser** — `parseAcceptHeader()` is a single universal parser for `Accept`, `Accept-Language` and `Accept-Encoding` (same RFC 7231 §5.3 grammar). Returns entries sorted by q-value, stable on ties.
 - **`negotiate()`** — best-match selection with wildcard support (`*`, `*/*`, `type/*`), case-preserving candidate return.
 - **`parseContentType()`** — `{type, charset, boundary, params}` tuple, case-insensitive on type/charset, case-preserving on boundary.
 
@@ -49,11 +49,6 @@ composer require oihana/php-http
 - **HTTP dates** — `parseHttpDate()` accepts all three RFC 7231 §7.1.1.1 formats (IMF-fixdate, RFC 850, asctime); `formatHttpDate()` emits IMF-fixdate from any `DateTimeInterface` converted to UTC.
 - **URL & query string toolkit** — `parseQueryString()` / `buildQueryString()` preserve duplicates, `withQueryParams()` / `removeQueryParam()` immutable PSR-7 updates, `normalizeUrl()` canonical form, `isAbsoluteUrl()`.
 - **HMAC signatures** — `signUrl()` / `verifySignedUrl()` for pre-signed URLs with TTL; `verifyHmacSignature()` for webhook payload verification (Stripe / GitHub / Slack / Mailchimp).
-
-### Route patterns
-
-- **Expand Slim route patterns** carrying optional bracket segments into their cartesian product of concrete routes (`expandOptionalSegments`).
-- **Compile / match / convert** patterns: `slimToRegex()` to PHP regex with named captures, `matchSlimPattern()` for path → args extraction, `slimToCasbinPattern()` for pure-string Casbin conversion, `casbinRoutePattern()` for the Slim Request-aware variant.
 
 ### User-Agent
 
@@ -106,4 +101,4 @@ Licensed under the [Mozilla Public License 2.0 (MPL‑2.0)](https://www.mozilla.
 - `oihana/php-reflect` – reflection and hydration utilities (`ConstantsTrait` powering every enum class): `https://github.com/BcommeBois/oihana-php-reflect`
 - `oihana/php-schema` – shared DTOs (`UserAgentInfo` returned by `parseUserAgent`, `Session`, …): `https://github.com/BcommeBois/oihana-php-schema`
 - `oihana/php-standards` – standard date formats (`DateFormat::RFC7231` used by `formatHttpDate` and the cookie `Expires` attribute): `https://github.com/BcommeBois/oihana-php-standards`
-- `oihana/php-auth` – Casbin RBAC + JWT/OIDC authorization toolkit, consumer of the IP / cookie / route-pattern helpers: `https://github.com/BcommeBois/oihana-php-auth`
+- `oihana/php-auth` – Casbin RBAC + JWT/OIDC authorization toolkit, consumer of the IP and cookie helpers: `https://github.com/BcommeBois/oihana-php-auth`

@@ -13,7 +13,7 @@ use function oihana\http\helpers\ips\ipInList ;
  * Tells whether a PSR-7 request was made over HTTPS.
  *
  * Resolution order:
- * 1. Direct scheme check via {@see Psr\Http\Message\UriInterface::getScheme()} —
+ * 1. Direct scheme check via {@see UriInterface::getScheme()} —
  *    returns `true` immediately when it is `https`.
  * 2. Anti-spoofing trusted-proxy mode: when a `$trustedProxies`
  *    list is provided **and** `REMOTE_ADDR` (from the request

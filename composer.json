@@ -1,7 +1,7 @@
 {
     "name" : "oihana/php-http" ,
     "type" : "library" ,
-    "description" : "Composable PHP HTTP toolkit — client IP detection (X-Forwarded-For chain walking + CIDR + IPv4/IPv6), typed Set-Cookie header builders, route pattern utilities (Slim optional segments + Casbin patterns), user-agent parsing. PSR-7 compatible, zero magic strings." ,
+    "description" : "Composable PHP HTTP toolkit — client IP detection (X-Forwarded-For chain walking + CIDR + IPv4/IPv6), typed Set-Cookie header builders, signed URLs, content negotiation, user-agent parsing. PSR-7 compatible, zero magic strings." ,
     "keywords" : [
         "php" ,
         "http" ,
@@ -13,9 +13,8 @@
         "set-cookie" ,
         "samesite" ,
         "user-agent" ,
-        "route-pattern" ,
-        "slim" ,
-        "casbin"
+        "signed-url" ,
+        "content-negotiation"
     ] ,
     "homepage" : "https://github.com/BcommeBois/oihana-php-http" ,
     "license" : "MPL-2.0" ,
@@ -41,20 +40,16 @@
             "oihana\\http\\" : "src/oihana/http"
         } ,
         "files" : [
-            "src/oihana/http/helpers/casbinRoutePattern.php" ,
             "src/oihana/http/helpers/detectUserAgentBot.php" ,
             "src/oihana/http/helpers/detectUserAgentBrowser.php" ,
             "src/oihana/http/helpers/detectUserAgentDeviceType.php" ,
             "src/oihana/http/helpers/detectUserAgentOs.php" ,
-            "src/oihana/http/helpers/expandOptionalSegments.php" ,
             "src/oihana/http/helpers/getUserAgent.php" ,
             "src/oihana/http/helpers/isBotUserAgent.php" ,
             "src/oihana/http/helpers/isMobileUserAgent.php" ,
-            "src/oihana/http/helpers/matchSlimPattern.php" ,
             "src/oihana/http/helpers/parseUserAgent.php" ,
-            "src/oihana/http/helpers/slimToCasbinPattern.php" ,
-            "src/oihana/http/helpers/slimToRegex.php" ,
-            
+
+
             "src/oihana/http/helpers/auth/getBasicAuth.php" ,
             "src/oihana/http/helpers/auth/getBearerToken.php" ,
             "src/oihana/http/helpers/auth/parseAuthorizationHeader.php" ,

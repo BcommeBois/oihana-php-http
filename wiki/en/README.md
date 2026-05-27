@@ -2,7 +2,7 @@
 
 ![Language](https://img.shields.io/badge/language-English-blue)
 
-`oihana/php-http` is a composable PHP library for HTTP-facing code: real client IP detection behind reverse proxies, GDPR-compliant anonymisation, typed cookie builders and parsers, PSR-7 authentication and request inspection helpers, content negotiation, HTTP dates, URL/query string, Slim-style route patterns, HMAC signatures for signed URLs and webhooks, User-Agent parser. PSR-7 compatible, zero magic strings, zero external dependency (outside the oihana ecosystem).
+`oihana/php-http` is a composable PHP library for HTTP-facing code: real client IP detection behind reverse proxies, GDPR-compliant anonymisation, typed cookie builders and parsers, PSR-7 authentication and request inspection helpers, content negotiation, HTTP dates, URL/query string, HMAC signatures for signed URLs and webhooks, User-Agent parser. PSR-7 compatible, zero magic strings, zero external dependency (outside the oihana ecosystem).
 
 ## Audience
 
@@ -14,7 +14,6 @@ PHP developers building an API behind one or more reverse proxies (Cloudflare, n
 - negotiate content (`Accept*`, `parseContentType`);
 - parse and format HTTP dates (RFC 7231 IMF-fixdate, RFC 850, asctime);
 - manipulate URLs and query strings without losing duplicates;
-- compile / match / convert Slim route patterns for Casbin seeding or OpenAPI;
 - sign URLs with a TTL and verify HMAC webhooks in constant time;
 - parse a User-Agent for analytics routing / bot detection.
 
@@ -63,14 +62,13 @@ if ( !verifyHmacSignature( $payload , $sig , $webhookSecret ) )
 - **[Cookies](cookies.md)** — `buildSetCookieHeader`, `expireSetCookieHeader`, `parseCookieHeader`, `parseSetCookieHeader`, `validateCookie{Name,Value}`, enums `CookieAttribute` / `CookieOption` / `CookiePriority` / `SameSite` / `SetCookieField`.
 - **[Authorization](authorization.md)** — `parseAuthorizationHeader`, `getBearerToken`, `getBasicAuth`, enums `AuthorizationField` / `BasicAuthField`.
 - **[PSR-7 request helpers](request.md)** — `wantsJson`, `isAjax`, `isHttpsRequest`.
-- **[Content negotiation](negotiation.md)** — `parseAcceptHeader` / `parseAcceptLanguage` / `parseAcceptEncoding`, `negotiate`, `parseContentType`, enums `AcceptField` / `ContentTypeField`.
+- **[Content negotiation](negotiation.md)** — `parseAcceptHeader` (universal for `Accept`, `Accept-Language`, `Accept-Encoding`), `negotiate`, `parseContentType`, enums `AcceptField` / `ContentTypeField`.
 - **[HTTP dates](dates.md)** — `parseHttpDate` (3 RFC 7231 formats), `formatHttpDate` (IMF-fixdate).
 - **[URL / Query string](urls.md)** — `parseQueryString`, `buildQueryString`, `withQueryParams`, `removeQueryParam`, `normalizeUrl`, `isAbsoluteUrl`.
 
 ### Higher-level
 
 - **[User-Agent](user-agent.md)** — `parseUserAgent`, detect helpers, `isBotUserAgent`, `isMobileUserAgent`, enums `BrowserName` / `OsName` + `UserAgentInfo` DTO (`oihana/php-schema`).
-- **[Route patterns](route-patterns.md)** — `expandOptionalSegments`, `slimToRegex`, `matchSlimPattern`, `slimToCasbinPattern`, `casbinRoutePattern`.
 - **[HMAC signatures](signatures.md)** — `signUrl`, `verifySignedUrl`, `verifyHmacSignature` (Stripe / GitHub / Slack / Mailchimp).
 
 ## Source code
@@ -80,7 +78,7 @@ The library code lives under [`src/oihana/http/`](../../src/oihana/http/).
 ## See also
 
 - [Packagist `oihana/php-http`](https://packagist.org/packages/oihana/php-http) — package page.
-- [`oihana/php-auth`](https://github.com/BcommeBois/oihana-php-auth) — Casbin RBAC + JWT/OIDC; consumes the IP, cookie and route-pattern helpers.
+- [`oihana/php-auth`](https://github.com/BcommeBois/oihana-php-auth) — Casbin RBAC + JWT/OIDC; consumes the IP and cookie helpers.
 - [`oihana/php-enums`](https://github.com/BcommeBois/oihana-php-enums) — typed HTTP constants (`HttpHeader`, `HttpStatusCode`, `AuthScheme`, …).
 - [`oihana/php-schema`](https://github.com/BcommeBois/oihana-php-schema) — shared DTOs (`UserAgentInfo`, `Session`, …).
 - [`oihana/php-standards`](https://github.com/BcommeBois/oihana-php-standards) — standard date formats (`DateFormat::RFC7231`).

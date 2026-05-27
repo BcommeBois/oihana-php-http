@@ -18,7 +18,6 @@ use Psr\Http\Message\ServerRequestInterface ;
 use function oihana\http\helpers\ips\getClientIp ;
 use function oihana\http\helpers\ips\truncateIpToSlash24 ;
 use function oihana\http\helpers\cookies\buildSetCookieHeader ;
-use function oihana\http\helpers\casbinRoutePattern ;
 
 use oihana\http\enums\CookieAttribute ;
 use oihana\http\enums\SameSite        ;
@@ -41,11 +40,7 @@ function handleLogin( ServerRequestInterface $request , string $token ) : array
         CookieAttribute::MAX_AGE   => 3600 ,
     ]) ;
 
-    // 4. Translate a Slim route into a Casbin policy pattern
-    $casbinPattern = casbinRoutePattern( '/users/{id}/sessions/{sid}' ) ;
-    // -> '/users/*/sessions/*'
-
-    return [ 'ip' => $clientIp , 'auditIp' => $auditIp , 'cookie' => $cookie , 'casbinPattern' => $casbinPattern ] ;
+    return [ 'ip' => $clientIp , 'auditIp' => $auditIp , 'cookie' => $cookie ] ;
 }
 ```
 
@@ -68,4 +63,3 @@ $ip = getClientIp( $request , [ '10.0.0.0/8' ] ) ;
 
 - [IP detection (ips/)](ips.md) — full catalog of the 11 IP helpers.
 - [Cookies](cookies.md) — build and expire cookies with typed attributes.
-- [Route patterns](route-patterns.md) — Slim patterns, optional segments, Casbin translation.

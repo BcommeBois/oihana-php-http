@@ -65,7 +65,7 @@ function detectUserAgentBrowser( string $ua ) :array
 
     // Safari last: its UA carries `Version/X.Y Safari/Z`, where the
     // Safari/Z token is the WebKit build, not the product version.
-    if ( preg_match( '/Version\/([\d.]+)\s+(?:Mobile\/[\w]+\s+)?Safari\//' , $ua , $m ) === 1 )
+    if ( preg_match( '/Version\/([\d.]+)\s+(?:Mobile\/\w+\s+)?Safari\//' , $ua , $m ) === 1 )
     {
         return [ BrowserName::SAFARI , $m[ 1 ] ] ;
     }

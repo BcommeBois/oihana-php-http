@@ -53,13 +53,5 @@ function detectUserAgentBot( string $ua ) :bool
         'HeadlessChrome' , 'PhantomJS' , 'Pingdom' , 'UptimeRobot' ,
     ] ;
 
-    foreach ( $named as $needle )
-    {
-        if ( stripos( $ua , $needle ) !== false )
-        {
-            return true ;
-        }
-    }
-
-    return false ;
+    return array_any( $named , fn( $needle ) => stripos( $ua , $needle ) !== false );
 }
