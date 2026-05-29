@@ -101,6 +101,19 @@ Pas géré ici (**intentionnellement**) :
 
 Le helper se concentre sur la primitive crypto (compute HMAC, compare en temps constant). Le framing vendor-specific reste de la responsabilité de l'intégration.
 
+## Constantes typées
+
+Évitez les chaînes brutes — le vocabulaire de signature est exposé en enums typées dans `oihana\http\enums` :
+
+- `SignatureFormat::HEX` / `::BASE64` / `::BASE64URL` — le `$format` accepté par `verifyHmacSignature()`.
+- `SignedUrlField::SIGNATURE` (`'sig'`) / `::EXPIRY` (`'exp'`) — les noms de paramètres de query écrits par `signUrl()` et lus par `verifySignedUrl()`. Pratique quand vous inspectez vous-même une URL signée.
+
+```php
+use oihana\http\enums\SignatureFormat ;
+
+verifyHmacSignature( $payload , $sig , $secret , 'sha256' , SignatureFormat::BASE64 ) ;
+```
+
 ## Choix techniques
 
 - `hash_equals()` partout — comparaisons en temps constant.

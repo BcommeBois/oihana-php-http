@@ -101,6 +101,19 @@ Not handled here (**intentionally**):
 
 The helper focuses on the crypto primitive (compute HMAC, compare constant-time). Vendor-specific framing remains the integration's responsibility.
 
+## Typed constants
+
+Avoid the raw strings — the signing vocabulary is exposed as typed enums in `oihana\http\enums`:
+
+- `SignatureFormat::HEX` / `::BASE64` / `::BASE64URL` — the `$format` accepted by `verifyHmacSignature()`.
+- `SignedUrlField::SIGNATURE` (`'sig'`) / `::EXPIRY` (`'exp'`) — the query-parameter names written by `signUrl()` and read by `verifySignedUrl()`. Handy when you inspect a signed URL yourself.
+
+```php
+use oihana\http\enums\SignatureFormat ;
+
+verifyHmacSignature( $payload , $sig , $secret , 'sha256' , SignatureFormat::BASE64 ) ;
+```
+
 ## Technical choices
 
 - `hash_equals()` everywhere — constant-time comparisons.

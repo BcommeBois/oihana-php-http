@@ -61,5 +61,5 @@ $ip = getClientIp( $request , [ '10.0.0.0/8' ] ) ;
 
 ## Étapes suivantes
 
-- [Détection d'IP (ips/)](ips.md) — catalogue complet des 11 helpers IP.
+- [Détection d'IP (ips/)](ips.md) — catalogue complet des 13 helpers IP.
 - [Cookies](cookies.md) — construire et expirer des cookies avec attributs typés.

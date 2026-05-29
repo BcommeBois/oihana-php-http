@@ -56,7 +56,7 @@ composer require oihana/php-http
 
 ### Under the hood
 
-- Consistent typed enums and constants — `CookieAttribute`, `CookieOption`, `CookiePriority`, `SameSite`, `SetCookieField`, `AcceptField`, `ContentTypeField`, `AuthorizationField`, `BasicAuthField`, `BrowserName`, `OsName`.
+- Consistent typed enums and constants — `CookieAttribute`, `CookieOption`, `CookiePriority`, `SameSite`, `SetCookieField`, `AcceptField`, `ContentTypeField`, `AuthorizationField`, `BasicAuthField`, `BrowserName`, `OsName`, `SignatureFormat`, `SignedUrlField`.
 - Pure PSR-7 — no framework lock-in. Works with Slim, Laravel, Symfony HTTP Foundation (via PSR-7 bridge), Hyperf, RoadRunner, etc.
 - Strongly-typed enums and constants — no magic strings anywhere.
 - Constant-time HMAC comparisons (`hash_equals()`) — safe against timing-side-channel attacks.

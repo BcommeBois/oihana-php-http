@@ -69,7 +69,7 @@ if ( !verifyHmacSignature( $payload , $sig , $webhookSecret ) )
 ### Au-dessus
 
 - **[User-Agent](user-agent.md)** — `parseUserAgent`, detect helpers, `isBotUserAgent`, `isMobileUserAgent`, enums `BrowserName` / `OsName` + DTO `UserAgentInfo` (`oihana/php-schema`).
-- **[Signatures HMAC](signatures.md)** — `signUrl`, `verifySignedUrl`, `verifyHmacSignature` (Stripe / GitHub / Slack / Mailchimp).
+- **[Signatures HMAC](signatures.md)** — `signUrl`, `verifySignedUrl`, `verifyHmacSignature` (Stripe / GitHub / Slack / Mailchimp), enums `SignatureFormat` / `SignedUrlField`.
 
 ### Transverse
 

@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-05-29
+
 ### Added
 
 - `SignatureFormat` enum class under `oihana\http\enums` — `HEX` (`'hex'`), `BASE64` (`'base64'`), `BASE64URL` (`'base64url'`). The output-encoding vocabulary accepted by `verifyHmacSignature()`'s `$format` argument, so callers can compare against constants instead of magic strings (matching the rest of the surface).
@@ -86,5 +88,6 @@ First public stable release. ~45 procedural helpers organised in seven sub-names
 - Added `oihana/php-schema: dev-main` to `require` — provides the `xyz\oihana\schema\http\UserAgentInfo` DTO returned by `parseUserAgent()` and the `xyz\oihana\schema\constants\http\DeviceType` constants used by `$deviceType`.
 - Added `oihana/php-standards: dev-main` to `require` — used to format cookie `Expires` values via the `org\common\DateFormat::RFC7231` constant (RFC 7231 IMF-fixdate).
 
-[Unreleased]: https://github.com/BcommeBois/oihana-php-http/compare/v1.0.0...HEAD
-[1.0.0]: https://github.com/BcommeBois/oihana-php-http/releases/tag/v1.0.0
+[Unreleased]: https://github.com/BcommeBois/oihana-php-http/compare/1.1.0...HEAD
+[1.1.0]: https://github.com/BcommeBois/oihana-php-http/compare/1.0.0...1.1.0
+[1.0.0]: https://github.com/BcommeBois/oihana-php-http/releases/tag/1.0.0
