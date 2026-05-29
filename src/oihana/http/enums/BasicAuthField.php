@@ -15,12 +15,12 @@ use oihana\reflect\traits\ConstantsTrait ;
  * use function oihana\http\helpers\auth\getBasicAuth ;
  * use oihana\http\enums\BasicAuthField ;
  *
- * $creds = getBasicAuth( $request ) ;
+ * $credentials = getBasicAuth( $request ) ;
  *
- * if ( $creds !== null )
+ * if ( $credentials !== null )
  * {
- *     $user = $creds[ BasicAuthField::USER ] ;
- *     $pass = $creds[ BasicAuthField::PASS ] ;
+ *     $user = $credentials[ BasicAuthField::USER ] ;
+ *     $pass = $credentials[ BasicAuthField::PASS ] ;
  * }
  * ```
  *
