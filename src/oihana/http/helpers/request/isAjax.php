@@ -2,6 +2,8 @@
 
 namespace oihana\http\helpers\request ;
 
+use oihana\enums\http\HttpHeader ;
+
 use Psr\Http\Message\ServerRequestInterface ;
 
 /**
@@ -30,7 +32,7 @@ function isAjax( ServerRequestInterface $request ) :bool
 {
     return strcasecmp
     (
-        $request->getHeaderLine( 'X-Requested-With' ) ,
+        $request->getHeaderLine( HttpHeader::X_REQUESTED_WITH ) ,
         'XMLHttpRequest' ,
     ) === 0 ;
 }
