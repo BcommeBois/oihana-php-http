@@ -2,6 +2,7 @@
 
 namespace tests\oihana\http\helpers\signatures ;
 
+use oihana\http\enums\SignatureFormat ;
 use PHPUnit\Framework\TestCase ;
 
 use function oihana\http\helpers\signatures\verifyHmacSignature ;
@@ -59,7 +60,7 @@ class VerifyHmacSignatureTest extends TestCase
 
         $this->assertTrue
         (
-            verifyHmacSignature( self::PAYLOAD , $sig , self::SECRET , 'sha256' , 'base64' )
+            verifyHmacSignature( self::PAYLOAD , $sig , self::SECRET , 'sha256' , SignatureFormat::BASE64 )
         ) ;
     }
 
@@ -70,7 +71,7 @@ class VerifyHmacSignatureTest extends TestCase
 
         $this->assertTrue
         (
-            verifyHmacSignature( self::PAYLOAD , $sig , self::SECRET , 'sha256' , 'base64url' )
+            verifyHmacSignature( self::PAYLOAD , $sig , self::SECRET , 'sha256' , SignatureFormat::BASE64URL )
         ) ;
     }
 
@@ -81,7 +82,7 @@ class VerifyHmacSignatureTest extends TestCase
 
         $this->assertFalse
         (
-            verifyHmacSignature( self::PAYLOAD , $hexSig , self::SECRET , 'sha256' , 'base64' )
+            verifyHmacSignature( self::PAYLOAD , $hexSig , self::SECRET , 'sha256' , SignatureFormat::BASE64 )
         ) ;
     }
 

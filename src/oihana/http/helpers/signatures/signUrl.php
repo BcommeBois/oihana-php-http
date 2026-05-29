@@ -6,6 +6,10 @@ namespace oihana\http\helpers\signatures ;
 
 use InvalidArgumentException ;
 
+use oihana\enums\HashAlgorithm ;
+use oihana\enums\http\UrlComponent ;
+use oihana\http\enums\SignedUrlField ;
+
 use function oihana\core\encoding\base64UrlEncode ;
 use function oihana\http\helpers\url\buildQueryString ;
 use function oihana\http\helpers\url\normalizeUrl ;
@@ -59,8 +63,9 @@ use function oihana\http\helpers\url\reassembleUrl ;
  *                                expires (the signature alone gates
  *                                access).
  * @param string      $algo       The hash algorithm passed to
- *                                `hash_hmac()`. Defaults to
- *                                `'sha256'`.
+ *                                `hash_hmac()`. One of the
+ *                                {@see HashAlgorithm} constants.
+ *                                Defaults to `'sha256'`.
  *
  * @return string The signed URL.
  *
@@ -68,7 +73,7 @@ use function oihana\http\helpers\url\reassembleUrl ;
  *                                  `$algo` is not a known
  *                                  `hash_hmac` algorithm.
  */
-function signUrl( string $url , string $secret , ?int $ttlSeconds = null , string $algo = 'sha256' ) :string
+function signUrl( string $url , string $secret , ?int $ttlSeconds = null , string $algo = HashAlgorithm::SHA256 ) :string
 {
     if ( $secret === '' )
     {
@@ -93,18 +98,18 @@ function signUrl( string $url , string $secret , ?int $ttlSeconds = null , strin
         ) ;
     }
 
-    $query = parseQueryString( $parts[ 'query' ] ?? '' ) ;
+    $query = parseQueryString( $parts[ UrlComponent::QUERY ] ?? '' ) ;
 
     // Strip existing sig/exp so the function is idempotent on
     // already-signed URLs.
-    unset( $query[ 'sig' ] , $query[ 'exp' ] ) ;
+    unset( $query[ SignedUrlField::SIGNATURE ] , $query[ SignedUrlField::EXPIRY ] ) ;
 
     if ( $ttlSeconds !== null )
     {
-        $query[ 'exp' ] = [ (string) ( time() + $ttlSeconds ) ] ;
+        $query[ SignedUrlField::EXPIRY ] = [ (string) ( time() + $ttlSeconds ) ] ;
     }
 
-    $parts[ 'query' ] = buildQueryString( $query ) ;
+    $parts[ UrlComponent::QUERY ] = buildQueryString( $query ) ;
 
     // Canonical signing payload — re-normalising sorts query keys.
     $canonical = normalizeUrl( reassembleUrl( $parts ) ) ;
@@ -112,8 +117,8 @@ function signUrl( string $url , string $secret , ?int $ttlSeconds = null , strin
     $sig = base64UrlEncode( hash_hmac( $algo , $canonical , $secret , true ) ) ;
 
     // Add sig and re-normalise so the final URL is canonical.
-    $query[ 'sig' ] = [ $sig ] ;
-    $parts[ 'query' ] = buildQueryString( $query ) ;
+    $query[ SignedUrlField::SIGNATURE ] = [ $sig ] ;
+    $parts[ UrlComponent::QUERY ] = buildQueryString( $query ) ;
 
     return normalizeUrl( reassembleUrl( $parts ) ) ;
 }

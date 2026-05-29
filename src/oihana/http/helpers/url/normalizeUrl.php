@@ -2,6 +2,9 @@
 
 namespace oihana\http\helpers\url ;
 
+use oihana\enums\http\UriScheme ;
+use oihana\enums\http\UrlComponent ;
+
 /**
  * Returns a canonical form of a URL string, suitable for deduplication,
  * caching and comparison.
@@ -53,36 +56,29 @@ function normalizeUrl( string $url ) :string
         return $url ;
     }
 
-    if ( isset( $parts[ 'scheme' ] ) )
+    if ( isset( $parts[ UrlComponent::SCHEME ] ) )
     {
-        $parts[ 'scheme' ] = strtolower( $parts[ 'scheme' ] ) ;
+        $parts[ UrlComponent::SCHEME ] = strtolower( $parts[ UrlComponent::SCHEME ] ) ;
     }
 
-    if ( isset( $parts[ 'host' ] ) )
+    if ( isset( $parts[ UrlComponent::HOST ] ) )
     {
-        $parts[ 'host' ] = strtolower( $parts[ 'host' ] ) ;
+        $parts[ UrlComponent::HOST ] = strtolower( $parts[ UrlComponent::HOST ] ) ;
     }
 
-    $defaultPorts =
-    [
-        'http'  => 80  ,
-        'https' => 443 ,
-        'ws'    => 80  ,
-        'wss'   => 443 ,
-        'ftp'   => 21  ,
-    ] ;
-
-    if ( isset( $parts[ 'port' ] , $parts[ 'scheme' ] )
-        && ( $defaultPorts[ $parts[ 'scheme' ] ] ?? null ) === $parts[ 'port' ] )
+    // Drop the port when it matches the scheme's well-known default
+    // (http:80, https:443, ws:80, wss:443, ftp:21).
+    if ( isset( $parts[ UrlComponent::PORT ] , $parts[ UrlComponent::SCHEME ] )
+        && UriScheme::defaultPort( $parts[ UrlComponent::SCHEME ] ) === $parts[ UrlComponent::PORT ] )
     {
-        unset( $parts[ 'port' ] ) ;
+        unset( $parts[ UrlComponent::PORT ] ) ;
     }
 
-    if ( isset( $parts[ 'query' ] ) && $parts[ 'query' ] !== '' )
+    if ( isset( $parts[ UrlComponent::QUERY ] ) && $parts[ UrlComponent::QUERY ] !== '' )
     {
-        $query = parseQueryString( $parts[ 'query' ] ) ;
+        $query = parseQueryString( $parts[ UrlComponent::QUERY ] ) ;
         ksort( $query ) ;
-        $parts[ 'query' ] = buildQueryString( $query ) ;
+        $parts[ UrlComponent::QUERY ] = buildQueryString( $query ) ;
     }
 
     return reassembleUrl( $parts ) ;
@@ -104,46 +100,46 @@ function reassembleUrl( array $parts ) :string
 {
     $url = '' ;
 
-    if ( isset( $parts[ 'scheme' ] ) )
+    if ( isset( $parts[ UrlComponent::SCHEME ] ) )
     {
-        $url .= $parts[ 'scheme' ] . ':' ;
+        $url .= $parts[ UrlComponent::SCHEME ] . ':' ;
     }
 
-    if ( isset( $parts[ 'host' ] ) )
+    if ( isset( $parts[ UrlComponent::HOST ] ) )
     {
         $url .= '//' ;
 
-        if ( isset( $parts[ 'user' ] ) )
+        if ( isset( $parts[ UrlComponent::USER ] ) )
         {
-            $url .= $parts[ 'user' ] ;
-            if ( isset( $parts[ 'pass' ] ) )
+            $url .= $parts[ UrlComponent::USER ] ;
+            if ( isset( $parts[ UrlComponent::PASS ] ) )
             {
-                $url .= ':' . $parts[ 'pass' ] ;
+                $url .= ':' . $parts[ UrlComponent::PASS ] ;
             }
             $url .= '@' ;
         }
 
-        $url .= $parts[ 'host' ] ;
+        $url .= $parts[ UrlComponent::HOST ] ;
 
-        if ( isset( $parts[ 'port' ] ) )
+        if ( isset( $parts[ UrlComponent::PORT ] ) )
         {
-            $url .= ':' . $parts[ 'port' ] ;
+            $url .= ':' . $parts[ UrlComponent::PORT ] ;
         }
     }
 
-    if ( isset( $parts[ 'path' ] ) )
+    if ( isset( $parts[ UrlComponent::PATH ] ) )
     {
-        $url .= $parts[ 'path' ] ;
+        $url .= $parts[ UrlComponent::PATH ] ;
     }
 
-    if ( isset( $parts[ 'query' ] ) && $parts[ 'query' ] !== '' )
+    if ( isset( $parts[ UrlComponent::QUERY ] ) && $parts[ UrlComponent::QUERY ] !== '' )
     {
-        $url .= '?' . $parts[ 'query' ] ;
+        $url .= '?' . $parts[ UrlComponent::QUERY ] ;
     }
 
-    if ( isset( $parts[ 'fragment' ] ) )
+    if ( isset( $parts[ UrlComponent::FRAGMENT ] ) )
     {
-        $url .= '#' . $parts[ 'fragment' ] ;
+        $url .= '#' . $parts[ UrlComponent::FRAGMENT ] ;
     }
 
     return $url ;

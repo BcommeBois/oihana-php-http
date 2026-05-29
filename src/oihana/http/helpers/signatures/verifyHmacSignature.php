@@ -4,6 +4,7 @@ declare( strict_types = 1 );
 
 namespace oihana\http\helpers\signatures ;
 
+use oihana\enums\HashAlgorithm ;
 use oihana\http\enums\SignatureFormat ;
 
 use function oihana\core\encoding\base64UrlEncode ;
@@ -53,8 +54,9 @@ use function oihana\core\encoding\base64UrlEncode ;
  * @param string $signature The signature value to verify, encoded
  *                          as specified by `$format`.
  * @param string $secret    The shared secret.
- * @param string $algo      The hash algorithm. Defaults to
- *                          `'sha256'`.
+ * @param string $algo      The hash algorithm — one of the
+ *                          {@see HashAlgorithm} constants. Defaults
+ *                          to `'sha256'`.
  * @param string $format    One of the {@see SignatureFormat}
  *                          constants — `'hex'`, `'base64'` or
  *                          `'base64url'`. Defaults to `'hex'`.
@@ -66,7 +68,7 @@ function verifyHmacSignature
     string $payload   ,
     string $signature ,
     string $secret    ,
-    string $algo      = 'sha256' ,
+    string $algo      = HashAlgorithm::SHA256 ,
     string $format    = SignatureFormat::HEX ,
 ) :bool
 {

@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `SignatureFormat` enum class under `oihana\http\enums` — `HEX` (`'hex'`), `BASE64` (`'base64'`), `BASE64URL` (`'base64url'`). The output-encoding vocabulary accepted by `verifyHmacSignature()`'s `$format` argument, so callers can compare against constants instead of magic strings (matching the rest of the surface).
+- `SignedUrlField` enum class under `oihana\http\enums` — `SIGNATURE` (`'sig'`), `EXPIRY` (`'exp'`). The query-string parameter names of the URL signing scheme, shared by `signUrl()` (writes them) and `verifySignedUrl()` (reads them). Centralising the names guards against the silent-failure mode where one side is renamed without the other.
+
+### Changed
+
+- `verifyHmacSignature()` now references the `SignatureFormat` constants for its `$format` default and `match` arms instead of inline string literals. The parameter type stays `string` and the constant values are byte-identical (`SignatureFormat::HEX === 'hex'`), so calls passing `'hex'` / `'base64'` / `'base64url'` literally keep working. No public API change.
+- `signUrl()` and `verifySignedUrl()` now reference the `SignedUrlField` constants instead of the inline `'sig'` / `'exp'` literals. The emitted parameter names are unchanged (`SignedUrlField::SIGNATURE === 'sig'`), so URLs signed by previous versions still verify. No public API or wire-format change.
+- `normalizeUrl()` / `reassembleUrl()` and the `$parts['query']` handling in `signUrl()` / `verifySignedUrl()` now reference the `oihana\enums\http\UrlComponent` constants (`SCHEME`, `HOST`, `PORT`, `USER`, `PASS`, `PATH`, `QUERY`, `FRAGMENT`) instead of the raw `parse_url()` array-key literals. The scheme→default-port table previously inlined in `normalizeUrl()` is now delegated to `oihana\enums\http\UriScheme::defaultPort()`, removing the duplicated map. Both enums ship in `oihana/php-enums` (already a transitive dependency). Output is byte-identical — pure internal refactor, no public API or behavioural change.
+- `signUrl()`, `verifySignedUrl()` and `verifyHmacSignature()` now declare their `$algo` default as `oihana\enums\HashAlgorithm::SHA256` instead of the inline `'sha256'` literal. The constant value is identical (`HashAlgorithm::SHA256 === 'sha256'`) and the parameter type stays `string`, so existing calls are unaffected. Runtime validation deliberately stays on PHP's `hash_hmac_algos()` (the HMAC-capable subset) rather than `HashAlgorithm::isAvailable()` (which is `hash_algos()`-based and would wrongly accept non-HMAC algorithms such as `crc32`). No public API change.
+
 ## [1.0.0] - 2026-05-27
 
 First public stable release. ~45 procedural helpers organised in seven sub-namespaces (`helpers/{auth,cookies,dates,ips,negotiation,request,signatures,url}`) plus the flat User-Agent helpers, 15 typed enum classes (zero magic strings across the surface), 482 PHPUnit tests, full bilingual EN/FR wiki including a dedicated Security guide. Two dependencies added during development: `oihana/php-schema` (for the `UserAgentInfo` DTO returned by `parseUserAgent`) and `oihana/php-standards` (for `DateFormat::RFC7231` used by HTTP date and cookie `Expires` formatting).

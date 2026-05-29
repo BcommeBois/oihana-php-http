@@ -4,6 +4,10 @@ declare( strict_types = 1 );
 
 namespace oihana\http\helpers\signatures ;
 
+use oihana\enums\HashAlgorithm ;
+use oihana\enums\http\UrlComponent ;
+use oihana\http\enums\SignedUrlField ;
+
 use function oihana\core\encoding\base64UrlDecode ;
 use function oihana\core\encoding\base64UrlEncode ;
 use function oihana\http\helpers\url\buildQueryString ;
@@ -44,13 +48,14 @@ use function oihana\http\helpers\url\reassembleUrl ;
  *                       query parameters).
  * @param string $secret The shared secret used by `signUrl()`.
  * @param string $algo   The hash algorithm used at signing time.
+ *                       One of the {@see HashAlgorithm} constants.
  *                       Defaults to `'sha256'` — must match the
  *                       value passed to `signUrl()`.
  *
  * @return bool `true` when the signature is valid AND (if `exp`
  *              is present) the URL has not yet expired.
  */
-function verifySignedUrl( string $url , string $secret , string $algo = 'sha256' ) :bool
+function verifySignedUrl( string $url , string $secret , string $algo = HashAlgorithm::SHA256 ) :bool
 {
     if ( $secret === '' )
     {
@@ -69,14 +74,14 @@ function verifySignedUrl( string $url , string $secret , string $algo = 'sha256'
         return false ;
     }
 
-    $query = parseQueryString( $parts[ 'query' ] ?? '' ) ;
+    $query = parseQueryString( $parts[ UrlComponent::QUERY ] ?? '' ) ;
 
-    if ( !isset( $query[ 'sig' ][ 0 ] ) || $query[ 'sig' ][ 0 ] === '' )
+    if ( !isset( $query[ SignedUrlField::SIGNATURE ][ 0 ] ) || $query[ SignedUrlField::SIGNATURE ][ 0 ] === '' )
     {
         return false ;
     }
 
-    $sig = $query[ 'sig' ][ 0 ] ;
+    $sig = $query[ SignedUrlField::SIGNATURE ][ 0 ] ;
 
     // Reject malformed base64url early.
     if ( base64UrlDecode( $sig ) === false )
@@ -85,9 +90,9 @@ function verifySignedUrl( string $url , string $secret , string $algo = 'sha256'
     }
 
     // Expiration check.
-    if ( isset( $query[ 'exp' ][ 0 ] ) )
+    if ( isset( $query[ SignedUrlField::EXPIRY ][ 0 ] ) )
     {
-        $exp = $query[ 'exp' ][ 0 ] ;
+        $exp = $query[ SignedUrlField::EXPIRY ][ 0 ] ;
 
         if ( !ctype_digit( $exp ) )
         {
@@ -101,10 +106,10 @@ function verifySignedUrl( string $url , string $secret , string $algo = 'sha256'
     }
 
     // Reconstruct the canonical signing payload by removing `sig`.
-    unset( $query[ 'sig' ] ) ;
+    unset( $query[ SignedUrlField::SIGNATURE ] ) ;
 
-    $parts[ 'query' ] = buildQueryString( $query ) ;
-    $canonical        = normalizeUrl( reassembleUrl( $parts ) ) ;
+    $parts[ UrlComponent::QUERY ] = buildQueryString( $query ) ;
+    $canonical                    = normalizeUrl( reassembleUrl( $parts ) ) ;
 
     $expected = base64UrlEncode( hash_hmac( $algo , $canonical , $secret , true ) ) ;
 
