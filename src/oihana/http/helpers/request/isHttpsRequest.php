@@ -3,6 +3,7 @@
 namespace oihana\http\helpers\request ;
 
 use oihana\enums\http\HttpHeader ;
+use oihana\enums\http\UriScheme ;
 use oihana\enums\ServerParam ;
 
 use Psr\Http\Message\ServerRequestInterface ;
@@ -49,7 +50,7 @@ use function oihana\http\helpers\ips\ipInList ;
  */
 function isHttpsRequest( ServerRequestInterface $request , array $trustedProxies = [] ) :bool
 {
-    if ( strcasecmp( $request->getUri()->getScheme() , 'https' ) === 0 )
+    if ( strcasecmp( $request->getUri()->getScheme() , UriScheme::HTTPS ) === 0 )
     {
         return true ;
     }
@@ -77,5 +78,5 @@ function isHttpsRequest( ServerRequestInterface $request , array $trustedProxies
         trim( $request->getHeaderLine( HttpHeader::X_FORWARDED_PROTO ) )
     ) ;
 
-    return $proto === 'https' ;
+    return $proto === UriScheme::HTTPS ;
 }
