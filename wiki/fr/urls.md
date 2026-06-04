@@ -1,6 +1,19 @@
 # URL / Query string
 
-Le dossier `helpers/url/` couvre les opérations URI les plus courantes en application code (RFC 3986). Neuf helpers en string-in/string-out (ou `UriInterface`-in/out pour les manipulateurs PSR-7).
+Le dossier `helpers/url/` couvre les opérations URI les plus courantes en application code (RFC 3986). Dix helpers en string-in/string-out (ou `UriInterface`-in/out pour les manipulateurs PSR-7).
+
+| Helper | À quoi ça sert |
+|---|---|
+| `parseQueryString()` | Parse une query string en map `nom → liste de valeurs` (doublons préservés). |
+| `buildQueryString()` | Reconstruit une query string depuis une telle map (inverse exact). |
+| `withQueryParams()` | Fusionne des params dans une URI PSR-7 (immutable ; `null` retire une clé). |
+| `removeQueryParam()` | Retire une clé query (et toutes ses valeurs) d'une URI PSR-7. |
+| `normalizeUrl()` | Forme canonique pour dédup / cache / comparaison (scheme+host en minuscules, port par défaut retiré, query triée). |
+| `isAbsoluteUrl()` | Indique si une chaîne porte un scheme (est une URL absolue). |
+| `getHost()` | Extrait l'hôte d'une URL, normalisé (minuscules, crochets IPv6 retirés), `null` si absent. |
+| `isPublicUrl()` | Indique si une URL vise un hôte joignable publiquement. |
+| `isLocalUrl()` | Indique si une URL vise un hôte local / privé / réservé. |
+| `withUrlComponents()` | Dérive une URL à partir d'une autre en remplaçant / retirant des composants. |
 
 ## Parsing / building de query string
 
@@ -168,6 +181,41 @@ isLocalUrl( '/relative/path' )          ; // false (pas d'hôte)
 ```
 
 > Ce n'est pas la négation stricte de `isPublicUrl()` : une URL sans hôte n'est ni publique ni locale, donc **les deux** renvoient `false`. La présence d'un hôte est requise.
+
+## Dériver une URL à partir d'une autre
+
+### `withUrlComponents( string $url , array $overrides ) : string`
+
+Parfois vous avez une URL et en voulez *presque* la même — passer `http` en `https`, changer le host, retirer les identifiants, supprimer le fragment. `withUrlComponents()` fait exactement ça : il parse l'URL, applique vos remplacements, puis la reconstruit. Les clés sont les constantes `oihana\enums\http\UrlComponent` ; une valeur `null` supprime le composant.
+
+C'est du string-in / string-out : pas besoin d'instancier un `UriInterface` PSR-7 (ni de tirer une implémentation PSR-7) juste pour modifier un bout d'URL.
+
+```php
+use oihana\enums\http\UrlComponent ;
+use function oihana\http\helpers\url\withUrlComponents ;
+
+// Changer uniquement le scheme
+withUrlComponents( 'http://example.com/path' , [ UrlComponent::SCHEME => 'https' ] ) ;
+// 'https://example.com/path'
+
+// Remplacer uniquement le mot de passe
+withUrlComponents( 'https://user:old@example.com' , [ UrlComponent::PASS => 'new' ] ) ;
+// 'https://user:new@example.com'
+
+// Retirer la query et le fragment
+withUrlComponents( 'https://example.com/p?x=1#frag' , [ UrlComponent::QUERY => null , UrlComponent::FRAGMENT => null ] ) ;
+// 'https://example.com/p'
+```
+
+**Limites** (volontairement hors périmètre — même posture pragmatique que `normalizeUrl()`) :
+
+- **Pas de percent-encoding.** Les valeurs sont insérées *telles quelles*. Une valeur avec des caractères réservés (un mot de passe contenant `@` ou `:`, un path avec une espace…) doit être encodée par vous, sinon l'URL produite est malformée.
+- **Pas de contrôle de validité.** Le résultat n'est ni re-parsé ni validé.
+- **L'hôte IPv6 garde ses crochets.** Pour fixer un hôte IPv6, passez-le entre crochets (`[::1]`). Attention à l'asymétrie avec `getHost()`, qui les *retire* — sa sortie est faite pour l'inspection, pas pour être réinjectée ici.
+- **Composants liés à l'autorité.** `user` / `pass` / `port` n'apparaissent que si un hôte est présent ; retirer l'hôte les fait tomber aussi.
+- **Fail-open.** Si l'URL ne peut pas être parsée, elle est renvoyée intacte et les remplacements sont ignorés.
+
+> Vous avez déjà un `UriInterface` PSR-7 sous la main ? Préférez ses méthodes natives `withScheme()` / `withUserInfo()` / `withHost()` / … — elles gèrent l'encodage pour vous. `withUrlComponents()` est l'alternative légère, basée sur des chaînes, quand vous n'avez pas (ou ne voulez pas) d'objet URI.
 
 ## Concaténation de path
 

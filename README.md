@@ -47,7 +47,7 @@ composer require oihana/php-http
 ### Dates, URLs, signatures
 
 - **HTTP dates** — `parseHttpDate()` accepts all three RFC 7231 §7.1.1.1 formats (IMF-fixdate, RFC 850, asctime); `formatHttpDate()` emits IMF-fixdate from any `DateTimeInterface` converted to UTC.
-- **URL & query string toolkit** — `parseQueryString()` / `buildQueryString()` preserve duplicates, `withQueryParams()` / `removeQueryParam()` immutable PSR-7 updates, `normalizeUrl()` canonical form, `isAbsoluteUrl()`, `getHost()` normalised host extraction, `isPublicUrl()` / `isLocalUrl()` (local / private / reserved host detection).
+- **URL & query string toolkit** — `parseQueryString()` / `buildQueryString()` preserve duplicates, `withQueryParams()` / `removeQueryParam()` immutable PSR-7 updates, `normalizeUrl()` canonical form, `isAbsoluteUrl()`, `getHost()` normalised host extraction, `isPublicUrl()` / `isLocalUrl()` (local / private / reserved host detection), `withUrlComponents()` derive a URL by replacing/removing components.
 - **HMAC signatures** — `signUrl()` / `verifySignedUrl()` for pre-signed URLs with TTL; `verifyHmacSignature()` for webhook payload verification (Stripe / GitHub / Slack / Mailchimp).
 
 ### User-Agent

@@ -1,6 +1,19 @@
 # URL / Query string
 
-The `helpers/url/` folder covers the most common URI operations in application code (RFC 3986). Nine helpers in string-in/string-out (or `UriInterface`-in/out for the PSR-7 manipulators).
+The `helpers/url/` folder covers the most common URI operations in application code (RFC 3986). Ten helpers in string-in/string-out (or `UriInterface`-in/out for the PSR-7 manipulators).
+
+| Helper | What it does |
+|---|---|
+| `parseQueryString()` | Parse a query string into a `name → list of values` map (duplicates preserved). |
+| `buildQueryString()` | Build a query string back from such a map (exact inverse). |
+| `withQueryParams()` | Immutably merge params into a PSR-7 `UriInterface` (`null` removes a key). |
+| `removeQueryParam()` | Remove a query key (and all its values) from a PSR-7 URI. |
+| `normalizeUrl()` | Canonical form for dedup / cache / compare (lowercase scheme+host, drop default port, sort query). |
+| `isAbsoluteUrl()` | Tell whether a string carries a scheme (is an absolute URL). |
+| `getHost()` | Extract a URL host, normalised (lowercased, IPv6 brackets stripped), `null` if absent. |
+| `isPublicUrl()` | Tell whether a URL targets a publicly reachable host. |
+| `isLocalUrl()` | Tell whether a URL targets a local / private / reserved host. |
+| `withUrlComponents()` | Derive a URL from another by replacing / removing components. |
 
 ## Query string parsing / building
 
@@ -168,6 +181,41 @@ isLocalUrl( '/relative/path' )          ; // false (no host)
 ```
 
 > Not a strict negation of `isPublicUrl()`: a host-less URL is neither public nor local, so **both** return `false` for it. The presence of a host is required.
+
+## Deriving a URL from another
+
+### `withUrlComponents( string $url , array $overrides ) : string`
+
+Sometimes you have a URL and want *almost* the same one — flip `http` to `https`, swap the host, strip the credentials, drop the fragment. `withUrlComponents()` does exactly that: it parses the URL, applies your overrides, and reassembles it. Keys are the `oihana\enums\http\UrlComponent` constants; a `null` value removes the component.
+
+It is string-in / string-out, so you don't need to instantiate a PSR-7 `UriInterface` (and pull a PSR-7 implementation) just to tweak one part.
+
+```php
+use oihana\enums\http\UrlComponent ;
+use function oihana\http\helpers\url\withUrlComponents ;
+
+// Switch scheme only
+withUrlComponents( 'http://example.com/path' , [ UrlComponent::SCHEME => 'https' ] ) ;
+// 'https://example.com/path'
+
+// Replace the password only
+withUrlComponents( 'https://user:old@example.com' , [ UrlComponent::PASS => 'new' ] ) ;
+// 'https://user:new@example.com'
+
+// Strip the query and the fragment
+withUrlComponents( 'https://example.com/p?x=1#frag' , [ UrlComponent::QUERY => null , UrlComponent::FRAGMENT => null ] ) ;
+// 'https://example.com/p'
+```
+
+**Limits** (deliberately out of scope — same pragmatic stance as `normalizeUrl()`):
+
+- **No percent-encoding.** Values are inserted *verbatim*. A value with reserved characters (a password containing `@` or `:`, a path with a space…) must be encoded by you, or the URL comes out malformed.
+- **No well-formedness check.** The result is not re-parsed or validated.
+- **IPv6 host keeps its brackets.** To set an IPv6 host, pass it bracketed (`[::1]`). Note the asymmetry with `getHost()`, which *strips* them — its output is for inspection, not to feed back here.
+- **Authority-bound components.** `user` / `pass` / `port` only appear when a host is present; removing the host drops them too.
+- **Fail-open.** If the URL can't be parsed, it is returned untouched and the overrides are ignored.
+
+> Already holding a PSR-7 `UriInterface`? Prefer its native `withScheme()` / `withUserInfo()` / `withHost()` / … — they handle encoding for you. `withUrlComponents()` is the lightweight string-based alternative when you don't have (or don't want) a URI object.
 
 ## Path concatenation
 

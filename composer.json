@@ -72,8 +72,10 @@
             "src/oihana/http/helpers/url/isPublicUrl.php" ,
             "src/oihana/http/helpers/url/normalizeUrl.php" ,
             "src/oihana/http/helpers/url/parseQueryString.php" ,
+            "src/oihana/http/helpers/url/reassembleUrl.php" ,
             "src/oihana/http/helpers/url/removeQueryParam.php" ,
             "src/oihana/http/helpers/url/withQueryParams.php" ,
+            "src/oihana/http/helpers/url/withUrlComponents.php" ,
 
             "src/oihana/http/helpers/signatures/signUrl.php" ,
             "src/oihana/http/helpers/signatures/verifyHmacSignature.php" ,
