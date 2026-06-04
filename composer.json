@@ -67,6 +67,7 @@
 
             "src/oihana/http/helpers/url/buildQueryString.php" ,
             "src/oihana/http/helpers/url/isAbsoluteUrl.php" ,
+            "src/oihana/http/helpers/url/isPublicUrl.php" ,
             "src/oihana/http/helpers/url/normalizeUrl.php" ,
             "src/oihana/http/helpers/url/parseQueryString.php" ,
             "src/oihana/http/helpers/url/removeQueryParam.php" ,

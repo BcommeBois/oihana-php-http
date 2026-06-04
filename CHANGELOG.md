@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `isPublicUrl()` helper under `oihana\http\helpers\url` — tells whether a URL points to a publicly reachable host. Extracts the host with `parse_url()`, returns `false` for `localhost` / `*.localhost`, and delegates IP literals (IPv4 or IPv6, brackets stripped) to `isPublicIp()` so every loopback, private (RFC 1918 / RFC 4193) and reserved range is rejected; any other FQDN is reported as public. Host-less input (relative path, empty string) returns `false`. Syntactic heuristic only — no DNS resolution, so it is a routing hint (e.g. "is an explicit public endpoint required?"), not an anti-SSRF guard.
+
 ## [1.1.0] - 2026-05-29
 
 ### Added

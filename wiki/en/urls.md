@@ -1,6 +1,6 @@
 # URL / Query string
 
-The `helpers/url/` folder covers the most common URI operations in application code (RFC 3986). Six helpers in string-in/string-out (or `UriInterface`-in/out for the PSR-7 manipulators).
+The `helpers/url/` folder covers the most common URI operations in application code (RFC 3986). Seven helpers in string-in/string-out (or `UriInterface`-in/out for the PSR-7 manipulators).
 
 ## Query string parsing / building
 
@@ -110,6 +110,32 @@ isAbsoluteUrl( '//example.com/path'        ) ; // false (protocol-relative)
 isAbsoluteUrl( '/api/v1'                   ) ; // false (path-absolute)
 isAbsoluteUrl( 'api/v1'                    ) ; // false (relative)
 ```
+
+### `isPublicUrl( string $url ) : bool`
+
+Imagine an installer that needs a public callback URL to register a webhook. If the operator points it at `http://localhost:8080` or `http://192.168.1.10`, the remote service will never be able to reach it — so the CLI should refuse early and ask for an explicit public endpoint (a tunnel like ngrok / cloudflared, a reverse proxy, …). `isPublicUrl()` is exactly that gate: it looks at the **host** of a URL and tells you whether it is reachable from the outside world.
+
+- `localhost` and any `*.localhost` sub-domain → `false`
+- IP literals (IPv4 or IPv6) are handed to [`isPublicIp()`](ips.md): every loopback, private (RFC 1918 / RFC 4193) and reserved range → `false`
+- any other named host (a FQDN such as `api.example.com`) → `true`
+- host-less input (relative path, empty string) → `false`
+
+```php
+use function oihana\http\helpers\url\isPublicUrl ;
+
+isPublicUrl( 'https://api.example.com'       ) ; // true
+isPublicUrl( 'https://8.8.8.8'               ) ; // true
+isPublicUrl( 'http://localhost:8080'         ) ; // false
+isPublicUrl( 'http://app.localhost'          ) ; // false (sub-domain)
+isPublicUrl( 'http://127.0.0.1'              ) ; // false (loopback)
+isPublicUrl( 'http://10.0.0.1'               ) ; // false (RFC 1918)
+isPublicUrl( 'http://[::1]'                  ) ; // false (loopback)
+isPublicUrl( 'http://[fd00::1]'              ) ; // false (unique local)
+isPublicUrl( 'http://[2001:4860:4860::8888]' ) ; // true
+isPublicUrl( '/relative/path'                ) ; // false (no host)
+```
+
+> **Syntactic heuristic, not an anti-SSRF guard.** No DNS resolution is performed: a FQDN that resolves to a private address (`internal.corp.lan` → `10.x`) is still reported as public. Use it as a *routing hint* ("do I need an explicit public endpoint here?"), not as a security boundary against server-side request forgery.
 
 ## Path concatenation
 
