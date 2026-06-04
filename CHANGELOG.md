@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-06-04
+
 ### Added
 
 - `getHost()` helper under `oihana\http\helpers\url` — extracts the host of a URL in a normalised, comparison-friendly form: lowercased and with IPv6 brackets removed (`[::1]` → `::1`), so the result feeds straight into `filter_var()` / `isPublicIp()`. Returns `null` when the URL carries no host (relative path, empty string, schemes without an authority such as `mailto:`). Intended for inspection / allow-listing, not URL reassembly (which stays the job of `normalizeUrl()`).
@@ -94,6 +96,7 @@ First public stable release. ~45 procedural helpers organised in seven sub-names
 - Added `oihana/php-schema: dev-main` to `require` — provides the `xyz\oihana\schema\http\UserAgentInfo` DTO returned by `parseUserAgent()` and the `xyz\oihana\schema\constants\http\DeviceType` constants used by `$deviceType`.
 - Added `oihana/php-standards: dev-main` to `require` — used to format cookie `Expires` values via the `org\common\DateFormat::RFC7231` constant (RFC 7231 IMF-fixdate).
 
-[Unreleased]: https://github.com/BcommeBois/oihana-php-http/compare/1.1.0...HEAD
+[Unreleased]: https://github.com/BcommeBois/oihana-php-http/compare/1.2.0...HEAD
+[1.2.0]: https://github.com/BcommeBois/oihana-php-http/compare/1.1.0...1.2.0
 [1.1.0]: https://github.com/BcommeBois/oihana-php-http/compare/1.0.0...1.1.0
 [1.0.0]: https://github.com/BcommeBois/oihana-php-http/releases/tag/1.0.0
