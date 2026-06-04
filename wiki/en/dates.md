@@ -2,6 +2,11 @@
 
 The `helpers/dates/` folder ships two helpers for HTTP headers that carry dates: `Date`, `Last-Modified`, `Expires`, `If-Modified-Since`, `If-Unmodified-Since`, `Retry-After`.
 
+| Helper | What it does |
+|---|---|
+| `parseHttpDate()` | Parse an HTTP-date header (the three RFC 7231 formats) into a UTC `DateTimeImmutable`; `null` when unparseable. |
+| `formatHttpDate()` | Format any `DateTimeInterface` as an IMF-fixdate string (converted to UTC, never mutates its input). |
+
 RFC 7231 §7.1.1.1 lists **three** legal formats:
 
 | Format | Example | Status |

@@ -2,6 +2,15 @@
 
 Le dossier `helpers/cookies/` contient six helpers pour construire et parser des en-têtes `Set-Cookie` / `Cookie` sans jongler avec la concaténation de chaînes. Tous les attributs passent par des enums typés — zéro chaîne magique, zéro oubli.
 
+| Helper | À quoi ça sert |
+|---|---|
+| `buildSetCookieHeader()` | Construit un en-tête `Set-Cookie` depuis nom / valeur / max-age / options (valide nom & valeur). |
+| `expireSetCookieHeader()` | Construit un `Set-Cookie` de suppression (`value=''` + `Max-Age=0`). |
+| `parseCookieHeader()` | Parse un en-tête `Cookie:` de requête en map `nom → valeur`. |
+| `parseSetCookieHeader()` | Parse une ligne `Set-Cookie` en tuple `{name, value, attributes}`. |
+| `validateCookieName()` | Lève une exception si le nom de cookie viole la grammaire token RFC 7230. |
+| `validateCookieValue()` | Lève une exception si la valeur contient des caractères de contrôle ou `;`. |
+
 ## Builder
 
 ### `buildSetCookieHeader( string $name , ?string $value , int $maxAge , array $options = [] ) : string`

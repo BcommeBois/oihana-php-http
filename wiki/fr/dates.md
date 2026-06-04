@@ -2,6 +2,11 @@
 
 Le dossier `helpers/dates/` fournit deux helpers pour les en-têtes HTTP qui transportent des dates : `Date`, `Last-Modified`, `Expires`, `If-Modified-Since`, `If-Unmodified-Since`, `Retry-After`.
 
+| Helper | À quoi ça sert |
+|---|---|
+| `parseHttpDate()` | Parse un en-tête HTTP-date (les trois formats RFC 7231) en `DateTimeImmutable` UTC ; `null` si illisible. |
+| `formatHttpDate()` | Formate n'importe quel `DateTimeInterface` en chaîne IMF-fixdate (converti en UTC, sans muter l'entrée). |
+
 RFC 7231 §7.1.1.1 légalise **trois** formats pour ces dates :
 
 | Format | Exemple | Statut |

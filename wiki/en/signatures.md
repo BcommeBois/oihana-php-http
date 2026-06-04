@@ -7,6 +7,12 @@ The `helpers/signatures/` folder covers the two recurring patterns of HTTP signa
 
 All comparisons use `hash_equals()` — constant-time, safe against timing-side-channel attacks.
 
+| Helper | What it does |
+|---|---|
+| `signUrl()` | Sign a URL with an HMAC, append `?sig=` (and `&exp=` when a TTL is given). |
+| `verifySignedUrl()` | Verify a signed URL (signature + expiry); fail-closed, never throws. |
+| `verifyHmacSignature()` | Verify an HMAC against a raw payload (webhooks); `hex` / `base64` / `base64url`. |
+
 ## Signed URLs
 
 ### `signUrl( string $url , string $secret , ?int $ttlSeconds = null , string $algo = 'sha256' ) : string`

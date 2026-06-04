@@ -2,6 +2,13 @@
 
 Le dossier `helpers/negotiation/` couvre la négociation `Accept*` (RFC 7231 §5.3) et le parsing `Content-Type` (RFC 7231 §3.1.1.1). Les retours utilisent les enums `AcceptField` et `ContentTypeField` pour éviter les magic strings.
 
+| Helper | À quoi ça sert |
+|---|---|
+| `parseAcceptHeader()` | Parse n'importe quel en-tête `Accept*` en entrées triées par q-value décroissante. |
+| `negotiate()` | Choisit la valeur serveur qui satisfait le mieux un en-tête `Accept*` (wildcards, `q=0`, valeur par défaut). |
+| `matchAcceptPattern()` | Teste un pattern déjà parsé contre un candidat (sous-helper de `negotiate`). |
+| `parseContentType()` | Parse un en-tête `Content-Type` en type média + paramètres. |
+
 ## Parsing des en-têtes `Accept*`
 
 ### `parseAcceptHeader( string $header ) : array`

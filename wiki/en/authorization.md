@@ -2,6 +2,12 @@
 
 The `helpers/auth/` folder covers parsing of the `Authorization` header (RFC 7235) and the `Bearer` (RFC 6750) and `Basic` (RFC 7617) schemes.
 
+| Helper | What it does |
+|---|---|
+| `parseAuthorizationHeader()` | Parse the `Authorization` header into a `{scheme, credentials}` tuple (scheme normalised to canonical casing). |
+| `getBearerToken()` | Extract the Bearer token from a PSR-7 request; `null` when missing / wrong scheme / empty. |
+| `getBasicAuth()` | Extract the `{user, pass}` pair from the Basic scheme (RFC 7617); `null` when invalid. |
+
 ## Low-level parser
 
 ### `parseAuthorizationHeader( string $header ) : ?array`

@@ -4,6 +4,14 @@ Le dossier `helpers/` contient un parseur regex-based, sans dépendance externe,
 
 Pour une couverture exhaustive du long tail (bots régionaux, navigateurs rares, *device fingerprinting*), branchez `ua-parser/uap-php` au-dessus — la lib est volontairement dependency-free.
 
+| Helper | À quoi ça sert |
+|---|---|
+| `getUserAgent()` | Lit la chaîne `User-Agent` brute depuis `$_SERVER` (`null` si absente). |
+| `parseUserAgent()` | Parse une chaîne UA en DTO structuré `UserAgentInfo` (renvoie toujours une instance). |
+| `isBotUserAgent()` | Indique si un UA est un bot / crawler / outil HTTP. |
+| `isMobileUserAgent()` | Indique si un UA est un format mobile **ou** tablette. |
+| *4 détecteurs bas-niveau* | Un signal à la fois (`detectUserAgentBot` / `Browser` / `Os` / `DeviceType`) — voir [Détecteurs bas-niveau](#détecteurs-bas-niveau). |
+
 ## Lecture brute
 
 ### `getUserAgent() : ?string`

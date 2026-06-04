@@ -2,6 +2,14 @@
 
 The `helpers/ips/` folder contains 13 helpers that solve the recurring problem of identifying the **real** client IP behind a chain of reverse proxies, plus GDPR-compliant anonymisation. The flagship helper is `getClientIp()`; the others are reusable building blocks.
 
+| Helper | What it does |
+|---|---|
+| `getClientIp()` | Flagship — resolve the real client IP behind trusted proxies (right-to-left forwarded-chain walk). |
+| `anonymizeIp()` | GDPR — route IPv4 to `/24`, IPv6 to `/48`; non-IP passes through. |
+| `truncateIpToSlash24()` | Anonymise an IPv4 to `/24` (no-op on IPv6 / invalid). |
+| `truncateIpToSlash48()` | Anonymise an IPv6 to `/48` (no-op on IPv4 / invalid). |
+| *9 building blocks* | Lower-level pieces (`isPublicIp`, `ipMatchesCidr`, `canonicalIp`, `walkForwardedChain`, …) — see [Building blocks](#building-blocks). |
+
 ## Trust model
 
 `X-Forwarded-For` and its cousins are **client-controllable** if you don't filter them. The lib's model is:

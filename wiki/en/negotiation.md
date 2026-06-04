@@ -2,6 +2,13 @@
 
 The `helpers/negotiation/` folder covers `Accept*` negotiation (RFC 7231 §5.3) and `Content-Type` parsing (RFC 7231 §3.1.1.1). Returns use the `AcceptField` and `ContentTypeField` enums to keep magic strings out of consumers.
 
+| Helper | What it does |
+|---|---|
+| `parseAcceptHeader()` | Parse any `Accept*` header into entries sorted by descending q-value. |
+| `negotiate()` | Pick the server-side value that best matches an `Accept*` header (wildcards, `q=0`, default fallback). |
+| `matchAcceptPattern()` | Test one already-parsed pattern against a candidate (sub-helper of `negotiate`). |
+| `parseContentType()` | Parse a `Content-Type` header into its media type + parameters. |
+
 ## Parsing `Accept*` headers
 
 ### `parseAcceptHeader( string $header ) : array`

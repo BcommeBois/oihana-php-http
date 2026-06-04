@@ -2,6 +2,14 @@
 
 Le dossier `helpers/ips/` contient 13 helpers qui résolvent le problème récurrent de l'identification de la **vraie** IP du client derrière une chaîne de reverse proxies, plus l'anonymisation conforme RGPD. Le helper principal est `getClientIp()` ; les autres sont des briques de base réutilisables.
 
+| Helper | À quoi ça sert |
+|---|---|
+| `getClientIp()` | Principal — résout la vraie IP client derrière des proxies de confiance (parcours droite-à-gauche de la chaîne forwarded). |
+| `anonymizeIp()` | RGPD — route IPv4 vers `/24`, IPv6 vers `/48` ; les non-IP passent inchangées. |
+| `truncateIpToSlash24()` | Anonymise une IPv4 en `/24` (no-op sur IPv6 / invalide). |
+| `truncateIpToSlash48()` | Anonymise une IPv6 en `/48` (no-op sur IPv4 / invalide). |
+| *9 briques de base* | Pièces bas-niveau (`isPublicIp`, `ipMatchesCidr`, `canonicalIp`, `walkForwardedChain`, …) — voir [Briques de base](#briques-de-base). |
+
 ## Modèle de confiance
 
 `X-Forwarded-For` et ses cousins sont **contrôlables par le client** si vous ne les filtrez pas. Le modèle de la lib est :

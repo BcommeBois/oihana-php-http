@@ -4,6 +4,14 @@ The `helpers/` folder ships a regex-based, dependency-free User-Agent parser tha
 
 For exhaustive long-tail coverage (regional bots, rare browsers, full device fingerprinting), plug `ua-parser/uap-php` on top — this lib is deliberately dependency-free.
 
+| Helper | What it does |
+|---|---|
+| `getUserAgent()` | Read the raw `User-Agent` string from `$_SERVER` (`null` when missing). |
+| `parseUserAgent()` | Parse a UA string into a structured `UserAgentInfo` DTO (always returns an instance). |
+| `isBotUserAgent()` | Tell whether a UA is a bot / crawler / HTTP tool. |
+| `isMobileUserAgent()` | Tell whether a UA is a mobile **or** tablet form factor. |
+| *4 low-level detectors* | One signal at a time (`detectUserAgentBot` / `Browser` / `Os` / `DeviceType`) — see [Low-level detectors](#low-level-detectors). |
+
 ## Raw read
 
 ### `getUserAgent() : ?string`

@@ -2,6 +2,12 @@
 
 The `helpers/request/` folder contains three predicates that inspect a PSR-7 request quickly without rewriting the same logic in every controller.
 
+| Helper | What it does |
+|---|---|
+| `wantsJson()` | Tell whether the client prefers JSON (top `Accept` entry; `/json` & `+json`). |
+| `isAjax()` | Check `X-Requested-With: XMLHttpRequest` (case-insensitive). |
+| `isHttpsRequest()` | Tell whether the request is HTTPS, directly or via a trusted proxy (`X-Forwarded-Proto`). |
+
 ## `wantsJson( ServerRequestInterface $request ) : bool`
 
 Tells whether the client prefers a JSON response by inspecting the **top-priority** entry of the `Accept` header. Recognises `/json` (`application/json`, `text/json`) and `+json` (`application/ld+json`, `application/vnd.api+json`, …) — Laravel-style heuristic.
