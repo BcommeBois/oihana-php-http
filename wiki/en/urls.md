@@ -1,6 +1,6 @@
 # URL / Query string
 
-The `helpers/url/` folder covers the most common URI operations in application code (RFC 3986). Seven helpers in string-in/string-out (or `UriInterface`-in/out for the PSR-7 manipulators).
+The `helpers/url/` folder covers the most common URI operations in application code (RFC 3986). Nine helpers in string-in/string-out (or `UriInterface`-in/out for the PSR-7 manipulators).
 
 ## Query string parsing / building
 
@@ -111,6 +111,22 @@ isAbsoluteUrl( '/api/v1'                   ) ; // false (path-absolute)
 isAbsoluteUrl( 'api/v1'                    ) ; // false (relative)
 ```
 
+### `getHost( string $url ) : ?string`
+
+Extracts the host of a URL in a form ready for comparison, allow-listing or IP validation — lowercased and with IPv6 brackets removed. Returns `null` when there is no host to speak of.
+
+```php
+use function oihana\http\helpers\url\getHost ;
+
+getHost( 'https://API.Example.com/path?x=1' ) ; // 'api.example.com'
+getHost( 'http://localhost:8080' )             ; // 'localhost'
+getHost( 'http://[2001:db8::1]:443/x' )        ; // '2001:db8::1'  (brackets stripped)
+getHost( 'mailto:alice@example.com' )          ; // null  (no authority)
+getHost( '/relative/path' )                    ; // null
+```
+
+The bracket-stripped IPv6 form is meant for *inspection*, not for reinjection into a URL (a bare `::1` is not a valid authority). URL reassembly stays the job of `normalizeUrl()`, which keeps the brackets it needs.
+
 ### `isPublicUrl( string $url ) : bool`
 
 Imagine an installer that needs a public callback URL to register a webhook. If the operator points it at `http://localhost:8080` or `http://192.168.1.10`, the remote service will never be able to reach it — so the CLI should refuse early and ask for an explicit public endpoint (a tunnel like ngrok / cloudflared, a reverse proxy, …). `isPublicUrl()` is exactly that gate: it looks at the **host** of a URL and tells you whether it is reachable from the outside world.
@@ -136,6 +152,22 @@ isPublicUrl( '/relative/path'                ) ; // false (no host)
 ```
 
 > **Syntactic heuristic, not an anti-SSRF guard.** No DNS resolution is performed: a FQDN that resolves to a private address (`internal.corp.lan` → `10.x`) is still reported as public. Use it as a *routing hint* ("do I need an explicit public endpoint here?"), not as a security boundary against server-side request forgery.
+
+### `isLocalUrl( string $url ) : bool`
+
+The readable counterpart of `isPublicUrl()` — `true` when the URL targets a local or private host (`localhost`, `*.localhost`, loopback / RFC 1918 / RFC 4193 / reserved IP).
+
+```php
+use function oihana\http\helpers\url\isLocalUrl ;
+
+isLocalUrl( 'http://localhost:8080' )   ; // true
+isLocalUrl( 'http://127.0.0.1' )        ; // true
+isLocalUrl( 'http://[::1]' )            ; // true
+isLocalUrl( 'https://api.example.com' ) ; // false
+isLocalUrl( '/relative/path' )          ; // false (no host)
+```
+
+> Not a strict negation of `isPublicUrl()`: a host-less URL is neither public nor local, so **both** return `false` for it. The presence of a host is required.
 
 ## Path concatenation
 

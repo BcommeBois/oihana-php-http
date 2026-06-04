@@ -9,7 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- `isPublicUrl()` helper under `oihana\http\helpers\url` — tells whether a URL points to a publicly reachable host. Extracts the host with `parse_url()`, returns `false` for `localhost` / `*.localhost`, and delegates IP literals (IPv4 or IPv6, brackets stripped) to `isPublicIp()` so every loopback, private (RFC 1918 / RFC 4193) and reserved range is rejected; any other FQDN is reported as public. Host-less input (relative path, empty string) returns `false`. Syntactic heuristic only — no DNS resolution, so it is a routing hint (e.g. "is an explicit public endpoint required?"), not an anti-SSRF guard.
+- `getHost()` helper under `oihana\http\helpers\url` — extracts the host of a URL in a normalised, comparison-friendly form: lowercased and with IPv6 brackets removed (`[::1]` → `::1`), so the result feeds straight into `filter_var()` / `isPublicIp()`. Returns `null` when the URL carries no host (relative path, empty string, schemes without an authority such as `mailto:`). Intended for inspection / allow-listing, not URL reassembly (which stays the job of `normalizeUrl()`).
+- `isPublicUrl()` helper under `oihana\http\helpers\url` — tells whether a URL points to a publicly reachable host. Extracts the host via `getHost()`, returns `false` for `localhost` / `*.localhost`, and delegates IP literals (IPv4 or IPv6) to `isPublicIp()` so every loopback, private (RFC 1918 / RFC 4193) and reserved range is rejected; any other FQDN is reported as public. Host-less input returns `false`. Syntactic heuristic only — no DNS resolution, so it is a routing hint (e.g. "is an explicit public endpoint required?"), not an anti-SSRF guard.
+- `isLocalUrl()` helper under `oihana\http\helpers\url` — readable counterpart of `isPublicUrl()`: `true` when the URL has a host that is local or private (`localhost`, `*.localhost`, loopback / RFC 1918 / RFC 4193 / reserved IP). Not a strict negation — host-less input is neither public nor local, so both return `false` for it.
 
 ## [1.1.0] - 2026-05-29
 

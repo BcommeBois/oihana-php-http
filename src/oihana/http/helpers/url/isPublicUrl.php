@@ -48,20 +48,12 @@ use function oihana\http\helpers\ips\isPublicIp ;
  */
 function isPublicUrl( string $url ) :bool
 {
-    $host = parse_url( $url , PHP_URL_HOST ) ;
+    $host = getHost( $url ) ;
 
-    if( !is_string( $host ) || $host === '' )
+    if( $host === null )
     {
         return false ;
     }
-
-    // parse_url() keeps IPv6 literals bracketed: [::1] , [2001:db8::1].
-    if( $host[0] === '[' && str_ends_with( $host , ']' ) )
-    {
-        $host = substr( $host , 1 , -1 ) ;
-    }
-
-    $host = strtolower( $host ) ;
 
     if( $host === 'localhost' || str_ends_with( $host , '.localhost' ) )
     {

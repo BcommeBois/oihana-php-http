@@ -1,6 +1,6 @@
 # URL / Query string
 
-Le dossier `helpers/url/` couvre les opérations URI les plus courantes en application code (RFC 3986). Sept helpers en string-in/string-out (ou `UriInterface`-in/out pour les manipulateurs PSR-7).
+Le dossier `helpers/url/` couvre les opérations URI les plus courantes en application code (RFC 3986). Neuf helpers en string-in/string-out (ou `UriInterface`-in/out pour les manipulateurs PSR-7).
 
 ## Parsing / building de query string
 
@@ -111,6 +111,22 @@ isAbsoluteUrl( '/api/v1'                   ) ; // false (path-absolute)
 isAbsoluteUrl( 'api/v1'                    ) ; // false (relative)
 ```
 
+### `getHost( string $url ) : ?string`
+
+Extrait l'hôte d'une URL sous une forme prête pour la comparaison, l'allow-listing ou la validation IP — en minuscules et sans les crochets IPv6. Renvoie `null` quand il n'y a pas d'hôte.
+
+```php
+use function oihana\http\helpers\url\getHost ;
+
+getHost( 'https://API.Example.com/path?x=1' ) ; // 'api.example.com'
+getHost( 'http://localhost:8080' )             ; // 'localhost'
+getHost( 'http://[2001:db8::1]:443/x' )        ; // '2001:db8::1'  (crochets retirés)
+getHost( 'mailto:alice@example.com' )          ; // null  (pas d'autorité)
+getHost( '/relative/path' )                    ; // null
+```
+
+La forme IPv6 sans crochets sert à *l'inspection*, pas à être réinjectée dans une URL (un `::1` nu n'est pas une autorité valide). La reconstruction d'URL reste le rôle de `normalizeUrl()`, qui conserve les crochets dont il a besoin.
+
 ### `isPublicUrl( string $url ) : bool`
 
 Imaginez un installeur qui a besoin d'une URL de callback publique pour enregistrer un webhook. Si l'opérateur saisit `http://localhost:8080` ou `http://192.168.1.10`, le service distant ne pourra jamais l'atteindre — le CLI doit donc refuser tout de suite et réclamer un point d'entrée public explicite (un tunnel type ngrok / cloudflared, un reverse proxy, …). `isPublicUrl()` est exactement ce garde-fou : il regarde l'**hôte** d'une URL et indique s'il est joignable depuis l'extérieur.
@@ -136,6 +152,22 @@ isPublicUrl( '/relative/path'                ) ; // false (pas d'hôte)
 ```
 
 > **Heuristique syntaxique, pas un garde-fou anti-SSRF.** Aucune résolution DNS n'est effectuée : un FQDN qui résout vers une adresse privée (`internal.corp.lan` → `10.x`) reste considéré comme public. À utiliser comme *indice de routage* (« ai-je besoin d'un point d'entrée public explicite ici ? »), pas comme une frontière de sécurité contre les requêtes falsifiées côté serveur (SSRF).
+
+### `isLocalUrl( string $url ) : bool`
+
+Le pendant lisible de `isPublicUrl()` — `true` quand l'URL vise un hôte local ou privé (`localhost`, `*.localhost`, IP loopback / RFC 1918 / RFC 4193 / réservée).
+
+```php
+use function oihana\http\helpers\url\isLocalUrl ;
+
+isLocalUrl( 'http://localhost:8080' )   ; // true
+isLocalUrl( 'http://127.0.0.1' )        ; // true
+isLocalUrl( 'http://[::1]' )            ; // true
+isLocalUrl( 'https://api.example.com' ) ; // false
+isLocalUrl( '/relative/path' )          ; // false (pas d'hôte)
+```
+
+> Ce n'est pas la négation stricte de `isPublicUrl()` : une URL sans hôte n'est ni publique ni locale, donc **les deux** renvoient `false`. La présence d'un hôte est requise.
 
 ## Concaténation de path
 
