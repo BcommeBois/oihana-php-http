@@ -116,6 +116,15 @@ class ParseAcceptHeaderTest extends TestCase
         $this->assertCount( 2 , $parsed ) ;
     }
 
+    public function testEntryWithEmptyTypeIsSkipped() :void
+    {
+        // The `;q=0.5` entry has no media type before the `;` → dropped.
+        $parsed = parseAcceptHeader( 'text/html, ;q=0.5' ) ;
+
+        $this->assertCount( 1 , $parsed ) ;
+        $this->assertSame( 'text/html' , $parsed[ 0 ][ AcceptField::TYPE ] ) ;
+    }
+
     public function testWildcards() :void
     {
         // The parser preserves header order for entries with the same

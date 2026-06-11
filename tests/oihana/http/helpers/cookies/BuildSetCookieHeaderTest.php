@@ -2,6 +2,7 @@
 
 namespace tests\oihana\http\helpers\cookies ;
 
+use DateTime ;
 use DateTimeImmutable ;
 use DateTimeZone ;
 use InvalidArgumentException ;
@@ -202,6 +203,23 @@ class BuildSetCookieHeaderTest extends TestCase
     public function testExpiresFromDateTimeImmutableIsFormattedAsIMFFixdateGMT() :void
     {
         $dt = new DateTimeImmutable( '2026-12-31 23:59:59' , new DateTimeZone( 'UTC' ) ) ;
+
+        $header = buildSetCookieHeader
+        (
+            'access_token' ,
+            'abc' ,
+            3600 ,
+            [ CookieOption::EXPIRES => $dt ] ,
+        ) ;
+
+        $this->assertStringContainsString( 'Expires=Thu, 31 Dec 2026 23:59:59 GMT' , $header ) ;
+    }
+
+    public function testExpiresFromMutableDateTimeIsConvertedToImmutable() :void
+    {
+        // A mutable \DateTime takes the createFromInterface() branch
+        // (the immutable case is exercised above).
+        $dt = new DateTime( '2026-12-31 23:59:59' , new DateTimeZone( 'UTC' ) ) ;
 
         $header = buildSetCookieHeader
         (

@@ -132,6 +132,17 @@ class ParseQueryStringTest extends TestCase
         ) ;
     }
 
+    public function testPairWithEmptyNameIsSkipped() :void
+    {
+        // `=foo` decodes to an empty name → the whole pair is dropped.
+        $this->assertSame( [] , parseQueryString( '=foo' ) ) ;
+        $this->assertSame
+        (
+            [ 'a' => [ '1' ] ] ,
+            parseQueryString( '=foo&a=1' ) ,
+        ) ;
+    }
+
     public function testValueWithEqualsSignIsPreservedAfterFirstSeparator() :void
     {
         // base64-padded tokens often contain `=`.

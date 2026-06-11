@@ -235,6 +235,20 @@ class GetClientIpTest extends TestCase
         ) ;
     }
 
+    public function testTrustedHopWithNoForwardingFallsBackToRemoteAddr(): void
+    {
+        // Trusted direct hop, but no X-Forwarded-For / Forwarded and no
+        // other proxy header → the walk yields nothing, the header loop is
+        // empty, and the helper falls back to REMOTE_ADDR itself.
+        $request = $this->request( [ 'REMOTE_ADDR' => '10.0.0.5' ] ) ;
+
+        $this->assertSame
+        (
+            '10.0.0.5' ,
+            getClientIp( $request , trustedProxies: [ '10.0.0.0/8' ] )
+        ) ;
+    }
+
     public function testTrustedProxyAcceptsBareIp(): void
     {
         $request = $this->request

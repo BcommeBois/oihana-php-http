@@ -98,6 +98,24 @@ class ParseForwardedHeaderTest extends TestCase
         ) ;
     }
 
+    public function testBracketedIPv6WithoutClosingBracketIsSkipped(): void
+    {
+        $this->assertSame
+        (
+            [] ,
+            parseForwardedHeader( 'for="[2001:db8::1"' )
+        ) ;
+    }
+
+    public function testEmptyBracketedValueIsSkipped(): void
+    {
+        $this->assertSame
+        (
+            [] ,
+            parseForwardedHeader( 'for="[]"' )
+        ) ;
+    }
+
     public function testInvalidIPsAreSkipped(): void
     {
         $this->assertSame

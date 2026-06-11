@@ -74,6 +74,38 @@ class ParseSetCookieHeaderTest extends TestCase
         $this->assertSame( 'foo' , $parsed[ SetCookieField::ATTRIBUTES ][ 'X-Custom' ] ) ;
     }
 
+    public function testFirstSegmentWithoutEqualsIsNameWithEmptyValue() :void
+    {
+        $parsed = parseSetCookieHeader( 'flagonly' ) ;
+
+        $this->assertSame( 'flagonly' , $parsed[ SetCookieField::NAME  ] ) ;
+        $this->assertSame( ''         , $parsed[ SetCookieField::VALUE ] ) ;
+    }
+
+    public function testEmptyAttributeSegmentIsSkipped() :void
+    {
+        // The double `;` produces an empty segment between the pair and Path.
+        $parsed = parseSetCookieHeader( 'a=b;;Path=/' ) ;
+
+        $this->assertSame
+        (
+            [ CookieAttribute::PATH => '/' ] ,
+            $parsed[ SetCookieField::ATTRIBUTES ] ,
+        ) ;
+    }
+
+    public function testAttributeWithEmptyNameIsSkipped() :void
+    {
+        // The `=x` segment has no name before the `=` → dropped.
+        $parsed = parseSetCookieHeader( 'a=b; =x; Path=/' ) ;
+
+        $this->assertSame
+        (
+            [ CookieAttribute::PATH => '/' ] ,
+            $parsed[ SetCookieField::ATTRIBUTES ] ,
+        ) ;
+    }
+
     public function testRoundTripWithBuildSetCookieHeader() :void
     {
         $built = 'refresh_token=rt_xyz; Path=/auth; Max-Age=2592000; SameSite=None; HttpOnly; Secure; Domain=api.example.com' ;

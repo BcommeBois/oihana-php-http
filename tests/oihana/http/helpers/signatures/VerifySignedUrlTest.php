@@ -96,6 +96,13 @@ class VerifySignedUrlTest extends TestCase
         $this->assertFalse( verifySignedUrl( $url , 'secret' ) ) ;
     }
 
+    public function testUnparseableUrlReturnsFalse() :void
+    {
+        // parse_url() returns false on a malformed authority (empty host
+        // with a port) → verifySignedUrl bails out early.
+        $this->assertFalse( verifySignedUrl( 'http://:80' , 'secret' ) ) ;
+    }
+
     public function testUnknownAlgorithmReturnsFalse() :void
     {
         $signed = signUrl( 'https://api.example.com/file' , 'secret' , 600 ) ;

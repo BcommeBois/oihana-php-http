@@ -80,6 +80,22 @@ class NegotiateTest extends TestCase
         ) ;
     }
 
+    public function testSoleQualityZeroEntryIsSkippedAndReturnsDefault() :void
+    {
+        // A single q=0 entry is processed (nothing else outranks it),
+        // skipped as an explicit refusal, and the default is returned.
+        $this->assertSame
+        (
+            'fallback' ,
+            negotiate
+            (
+                'text/html;q=0' ,
+                [ 'text/html' ] ,
+                'fallback' ,
+            ) ,
+        ) ;
+    }
+
     public function testTopLevelWildcardForLanguages() :void
     {
         $this->assertSame
