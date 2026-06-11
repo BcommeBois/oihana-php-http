@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- `truncateIpToSlash48()` dropped an unreachable defensive guard: the `inet_pton()` failure / non-16-byte check that followed the `filter_var(FILTER_FLAG_IPV6)` validation could never fire (a strict IPv6 always decodes to exactly 16 bytes). Pure internal simplification — same no-op-on-non-IPv6 contract, all tests green.
+
 ## [1.2.0] - 2026-06-04
 
 ### Added

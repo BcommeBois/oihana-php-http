@@ -59,12 +59,9 @@ function truncateIpToSlash48( ?string $ip ) :?string
         return $ip ;
     }
 
-    $bin = @inet_pton( $ip ) ;
-
-    if ( $bin === false || strlen( $bin ) !== 16 )
-    {
-        return $ip ;
-    }
+    // filter_var above already guaranteed a strict IPv6 address, so
+    // inet_pton() always succeeds and yields exactly 16 bytes here.
+    $bin = inet_pton( $ip ) ;
 
     // Keep the first 48 bits (6 bytes) of network prefix, zero the
     // remaining 80 bits (10 bytes) of host identifier.
